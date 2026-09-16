@@ -157,7 +157,7 @@ footer .brand .w,.cta .brand .w{color:#fff}
 .trust .lb{font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
 .marq{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
 .marq-t{display:flex;width:max-content;animation:marq 60s linear infinite}
-.marq:hover .marq-t{animation-play-state:paused}
+
 .marq-t span{font-family:var(--fd);font-weight:800;font-stretch:118%;font-size:1.4rem;text-transform:uppercase;letter-spacing:.02em;padding:0 30px;white-space:nowrap;color:#B3B6C4;transition:color .3s}
 .marq-t span:hover{color:var(--tx)}
 @keyframes marq{to{transform:translateX(-50%)}}
@@ -850,6 +850,10 @@ html[data-theme="dark"] .toast button{background:#0B0C12;color:#5FE0B4}
 body.scrolldn .fab{transform:translateY(160%)}
 body.scrolldn .cpill.on{transform:translateY(160%)}
 body.scrolldn .totop{transform:translateY(160%)}
+/* ===== FIX1 ===== */
+.wa-ic,.fab svg.wa-ic,.btn svg.wa-ic{fill:currentColor!important;stroke:none!important}
+.giant{container-type:inline-size;overflow:visible}
+.giant span{font-size:calc(100cqi / 5.1)}
 </style>
 </head>
 <body>
@@ -977,14 +981,14 @@ body.scrolldn .totop{transform:translateY(160%)}
     <div class="g2"><input id="cCep" placeholder="CEP (frete)" aria-label="CEP" inputmode="numeric" autocomplete="postal-code"><input id="cData" placeholder="Data do evento" aria-label="Data do evento"></div>
     <textarea id="cObs" aria-label="Observações" rows="2" placeholder="Observações: cores extras, data do evento, frase pra gravar…"></textarea>
     <div class="logostep" id="logoStep" hidden role="status"><b>Último passo: mande o logo na conversa</b><span id="logoStepTxt"></span><button type="button" class="btn btn-line btn-sm" id="logoShare" hidden>Enviar logo pelo WhatsApp</button></div>
-    <button class="btn btn-wa" id="cartSend" type="button"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9.9 8.3L4 21l1.3-6.6A8.5 8.5 0 1 1 21 11.5z"/></svg>Enviar orçamento no WhatsApp</button>
+    <button class="btn btn-wa" id="cartSend" type="button"><svg class="wa-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>Enviar orçamento no WhatsApp</button>
     <div class="row"><button class="btn btn-line btn-sm" id="cartCopy" type="button">Copiar pedido</button><button class="btn btn-line btn-sm" id="cartClear" type="button">Limpar</button></div>
     <p class="note" style="margin-top:10px;color:var(--ink3)">Resposta em até 1 hora útil (seg a sex, 8h às 18h). Sem cadastro: o pedido abre na conversa da Khaus já escrito. Anexou o logo? No computador ele é copiado pra você colar com Ctrl+V; no celular, envie pelo botão que aparece aqui ou pelo clipe da conversa.</p>
   </div>
 </div></div>
 <aside aria-label="Atalhos"><button type="button" class="cpill" id="cpill" data-open-cart aria-label="Abrir orçamento"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/></svg>Orçamento <b id="cpillN">0</b></button>
 <a class="totop" id="totop" href="#topo" aria-label="Voltar ao topo"><svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="24"/></svg><i>↑</i></a>
-<a class="fab" id="fab" href="https://wa.me/5555999768527?text=Ol%C3%A1!%20Vi%20o%20site%20da%20Khaus%20e%20quero%20um%20or%C3%A7amento." target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9.9 8.3L4 21l1.3-6.6A8.5 8.5 0 1 1 21 11.5z"/></svg>WhatsApp</a></aside>
+<a class="fab" id="fab" href="https://wa.me/5555999768527?text=Ol%C3%A1!%20Vi%20o%20site%20da%20Khaus%20e%20quero%20um%20or%C3%A7amento." target="_blank" rel="noopener"><svg class="wa-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>WhatsApp</a></aside>
 <div class="toast" id="toast"></div>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1216,7 +1220,7 @@ if(fine&&!reduce){ window.addEventListener("mousemove",function(e){ var x=(e.cli
 /* ===== FX2 ===== */
 (function(){
   /* letras do h1 */
-  if(hasGsap&&!reduce){ $$("#h1 .w").forEach(function(w){ var t=w.textContent; w.textContent=""; t.split("").forEach(function(ch){ var c=document.createElement("span"); c.className="c"; c.textContent=ch; w.appendChild(c); }); }); }
+  
   /* estrelas dos depoimentos */
   $$(".dp .stars").forEach(function(st){ var t=st.textContent.trim(); st.innerHTML=t.split("").map(function(ch){ return "<i>"+ch+"</i>"; }).join(""); });
   /* rodapé: links rolando */
@@ -1321,10 +1325,10 @@ function pimg(id,cls){ var d=imgDim(id), o=null; cls=cls||""; try{ o=byId(id)||k
 /* ===== preloader ===== */
 renderGrid(); paintCart(); revealNew(); paintLogo();
 document.documentElement.classList.add("pre-on");
-var h1w=$$("#h1 .w .c").length?$$("#h1 .w .c"):$$("#h1 .w"); if(hasGsap&&!isMobile) gsap.set(h1w,{yPercent:110,rotateX:-70,opacity:0,transformPerspective:600,transformOrigin:"50% 100%"});
+var h1w=$$("#h1 .w"); if(hasGsap&&!isMobile) gsap.set(h1w,{yPercent:60,opacity:0});
 var quick=false; try{ quick=!!sessionStorage.getItem("khaus-pre"); sessionStorage.setItem("khaus-pre","1"); }catch(e){}
 var heroDone=false;
-function heroIn(){ if(heroDone) return; heroDone=true; $(".hero").classList.add("in"); document.documentElement.classList.remove("pre-on"); if(!hasGsap||reduce||isMobile){ $("#pre").style.display="none"; var p2=$(".pre2"); if(p2) p2.style.display="none"; if(hasGsap&&!isMobile) gsap.set(h1w,{yPercent:0,opacity:1}); return; } var tl=gsap.timeline(); tl.to("#pre",{yPercent:-100,duration:.7,ease:"expo.inOut"}).to(".pre2",{yPercent:-100,duration:.95,ease:"expo.inOut"},"-=.78").set(["#pre",".pre2"],{display:"none"}).to(h1w,{yPercent:0,rotateX:0,opacity:1,duration:1.2,ease:"expo.out",stagger:{each:.022,from:"start"}},"-=.5").from([".hero .eb",".hero .sub",".hero .hcta",".hero .micro"],{y:18,opacity:0,duration:.9,ease:"power3.out",stagger:.08},"-=.9").from("#show",{scale:.9,opacity:0,duration:1.3,ease:"expo.out"},"-=1.2").from(".chipf",{y:20,opacity:0,duration:.8,stagger:.12,ease:"back.out(1.6)"},"-=.8"); }
+function heroIn(){ if(heroDone) return; heroDone=true; $(".hero").classList.add("in"); document.documentElement.classList.remove("pre-on"); if(!hasGsap||reduce||isMobile){ $("#pre").style.display="none"; var p2=$(".pre2"); if(p2) p2.style.display="none"; if(hasGsap&&!isMobile) gsap.set(h1w,{yPercent:0,opacity:1}); return; } var tl=gsap.timeline(); tl.to("#pre",{yPercent:-100,duration:.7,ease:"expo.inOut"}).to(".pre2",{yPercent:-100,duration:.95,ease:"expo.inOut"},"-=.78").set(["#pre",".pre2"],{display:"none"}).to(h1w,{yPercent:0,opacity:1,duration:1,ease:"expo.out",stagger:.07,clearProps:"transform,opacity"},"-=.5").from([".hero .eb",".hero .sub",".hero .hcta",".hero .micro"],{y:18,opacity:0,duration:.9,ease:"power3.out",stagger:.08},"-=.9").from("#show",{scale:.9,opacity:0,duration:1.3,ease:"expo.out"},"-=1.2").from(".chipf",{y:20,opacity:0,duration:.8,stagger:.12,ease:"back.out(1.6)"},"-=.8"); }
 setTimeout(heroIn,quick?400:700);
 if(isMobile){ heroIn(); } else if(hasGsap&&!reduce){ var o={v:0},d=quick?.2:.4; gsap.to(o,{v:100,duration:d,ease:"power2.inOut",onUpdate:function(){ var v=Math.round(o.v); $("#preN").textContent=String(v).padStart(3,"0"); $("#preBar").style.width=v+"%"; },onComplete:function(){ setTimeout(heroIn,quick?60:200); }}); } else heroIn();
 });
