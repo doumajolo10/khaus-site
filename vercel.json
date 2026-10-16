@@ -30,6 +30,25 @@
      "value": "SAMEORIGIN"
     }
    ]
+  },
+  {
+   "source": "/painel(.*)",
+   "headers": [
+    {
+     "key": "X-Robots-Tag",
+     "value": "noindex, nofollow"
+    },
+    {
+     "key": "Cache-Control",
+     "value": "no-store"
+    }
+   ]
+  }
+ ],
+ "rewrites": [
+  {
+   "source": "/painel",
+   "destination": "/painel/index.html"
   }
  ]
 }
