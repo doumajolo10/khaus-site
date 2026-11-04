@@ -366,13 +366,14 @@ function atualizaOrc() {
     const c = p.cores[it.cor] || p.cores[0], un = comPrazo(unitario(p, it.q), it.pz);
     if (un == null) temConsulta = true; else total += un * it.q;
     const mini = p.fonte === "k" && p.fotoK ? `img/${p.fotoK}-240.webp` : foto(c.img, 1);
-    return `<div class="it"><img src="${mini}" alt="" width="64" height="64" loading="lazy"><div class="it-info"><b>${esc(p.nome)}</b><span>${esc(c.nome)}${un != null ? " · " + brl(un) + "/un." : ""}${it.pz ? " · " + esc(it.pz.nome) : ""}</span>
+    return `<div class="it"><img src="${mini}" alt="" width="64" height="64" loading="lazy"><div class="it-info"><b>${esc(p.nome)}</b><span>${c.nome !== "Única" ? esc(c.nome) + (un != null ? " · " : "") : ""}${un != null ? brl(un) + "/un." : ""}${it.pz ? " · " + esc(it.pz.nome) : ""}</span>
       <div class="it-q"><button type="button" data-iq="${i}" data-d="-1" aria-label="Menos">−</button><input type="number" inputmode="numeric" value="${it.q}" min="${p.min}" data-iqv="${i}" aria-label="Quantidade de ${esc(p.nome)}"><button type="button" data-iq="${i}" data-d="1" aria-label="Mais">+</button><em>${un != null ? brl(un * it.q) : "Sob consulta"}</em></div>
       ${it.q < p.min ? `<small class="it-av">Mínimo ${int(p.min)} un.</small>` : ""}</div><button type="button" class="it-x" data-tirai="${i}" aria-label="Remover ${esc(p.nome)}">×</button></div>`;
   }).join("") : `<div class="gav-vazio"><b>Seu orçamento está vazio.</b><p>Escolha um produto, a cor e a quantidade e toque em “Adicionar ao orçamento”.</p></div>`;
   $("#orcTotal").textContent = brl(total) + (temConsulta ? " + itens sob consulta" : "");
   $("#orcDemo").hidden = !DEMO || !n;
   $("#orcForm").hidden = !n;
+  previa();
 }
 function adiciona() {
   const { p, cor, q } = F;
@@ -383,24 +384,37 @@ function adiciona() {
   salvaOrc(); fecha("#ficha");
   aviso(`${p.nome} (${p.cores[cor].nome}) no orçamento`, "Ver orçamento", () => abre("#orc"));
 }
+// Mensagem do WhatsApp: *negrito* e _itálico_ do próprio WhatsApp, um bloco por item, resumo e dados do cliente
 function mensagem() {
-  const linhas = [`Olá, Khaus! Quero um orçamento (${codigo()}):`, ""];
-  let total = 0, n = 0;
+  const L = [`*Pedido de orçamento · Khaus Brindes*`, `Código: ${codigo()}`, "", "Olá! Montei este orçamento no site:", ""];
+  let total = 0, economia = 0, unidades = 0, n = 0, consulta = 0;
   for (const it of ORC) {
     const p = POR_ID.get(it.id); if (!p) continue;
-    const c = p.cores[it.cor] || p.cores[0], un = comPrazo(unitario(p, it.q), it.pz); n++;
-    linhas.push(`${n}. ${p.nome}${c.nome !== "Única" ? " — " + c.nome : ""}`);
-    linhas.push(`   Ref. ${c.cod} · ${int(it.q)} un.${un != null ? ` × ${brl(un)} = ${brl(un * it.q)}` : " · preço sob consulta"}`);
-    if (it.pz) linhas.push(`   Prazo: ${prazoTxt(it.pz)}${it.pz.extra ? ` (+${it.pz.extra}%)` : ""}`);
-    linhas.push("");
-    if (un != null) total += un * it.q;
+    const c = p.cores[it.cor] || p.cores[0], un = comPrazo(unitario(p, it.q), it.pz), base = comPrazo(unitario(p, p.min), it.pz);
+    n++; unidades += it.q;
+    L.push(`*${n}. ${p.nome}*`);
+    L.push((c.nome !== "Única" ? `Cor: ${c.nome} · ` : "") + `Ref.: ${c.cod}`);
+    if (un != null) {
+      L.push(`${int(it.q)} un. × ${brl(un)} = *${brl(un * it.q)}*`);
+      total += un * it.q;
+      if (base != null && base > un) economia += (base - un) * it.q;
+    } else { L.push(`${int(it.q)} un. · preço sob consulta`); consulta++; }
+    if (it.pz) L.push(`Prazo: ${prazoTxt(it.pz)}${it.pz.extra ? ` (+${it.pz.extra}%)` : ""}`);
+    if (it.q < p.min) L.push(`_Abaixo do mínimo de ${int(p.min)} un._`);
+    L.push("");
   }
-  linhas.push("──────────", `Total estimado: ${brl(total)}${DEMO ? " (valores de demonstração)" : ""}`);
+  L.push("━━━━━━━━━━━━━━");
+  L.push(`*Total estimado: ${brl(total)}*${consulta ? " + itens sob consulta" : ""}`);
+  L.push(`${n} ${n === 1 ? "produto" : "produtos"} · ${int(unidades)} unidades`);
+  if (economia >= 0.01) L.push(`Economia pela quantidade: ${brl(economia)}`);
+  if (DEMO) L.push("_Valores de demonstração: o preço final vem no orçamento._");
   const dados = [["Nome", $("#oNome").value], ["Empresa", $("#oEmpresa").value], ["Cidade", $("#oCidade").value], ["Precisa até", $("#oData").value ? $("#oData").value.split("-").reverse().join("/") : ""], ["Obs.", $("#oObs").value]].filter(d => d[1].trim());
-  if (dados.length) linhas.push("", ...dados.map(([k, v]) => `${k}: ${v.trim()}`));
-  linhas.push("", "Vou mandar o logo da empresa aqui na conversa.");
-  return linhas.join("\n");
+  if (dados.length) L.push("", "*Meus dados*", ...dados.map(([k, v]) => `${k}: ${v.trim()}`));
+  L.push("", "Vou mandar o logo da empresa aqui na conversa (PNG ou PDF, de preferência com fundo transparente).");
+  return L.join("\n");
 }
+// mostra como o WhatsApp vai exibir: *negrito* e _itálico_
+function previa() { const pre = $("#orcPrev"); if (pre && ORC.length) pre.innerHTML = esc(mensagem()).replace(/\*([^*\n]+)\*/g, "<b>$1</b>").replace(/(^|\s)_([^_\n]+)_/g, "$1<i>$2</i>"); }
 function envia() {
   if (!$("#oNome").value.trim()) { $("#oNome").focus(); $("#oNome").reportValidity(); return; }
   ls("khaus-cliente", { nome: $("#oNome").value, empresa: $("#oEmpresa").value, cidade: $("#oCidade").value });
@@ -449,6 +463,7 @@ $("#tema").onclick = () => {
 };
 $("#orcBtn").onclick = () => abre("#orc");
 $("#orcEnviar").onclick = envia;
+$("#orcForm").addEventListener("input", previa);
 $("#fiAdd").onclick = adiciona;
 $("#fiQ").addEventListener("input", e => { F.q = Math.max(0, Math.round(+e.target.value || 0)); pintaPreco(); });
 $("#fiMenos").onclick = () => { F.q = Math.max(F.p.min, F.q - passo(F.q)); $("#fiQ").value = F.q; pintaPreco(); };

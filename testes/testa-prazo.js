@@ -49,6 +49,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   const url = await p.evaluate(() => new Promise(res => { window.open = (u) => { res(u); return null; }; document.querySelector("#orcEnviar").click(); }));
   const t = decodeURIComponent(url.split("text=")[1] || "");
   ok(/Prazo: (Expresso|Turbo) \(\d+ a \d+ dias úteis\) \(\+\d+%\)/.test(t), "mensagem traz o prazo, os dias e o acréscimo");
+  ok(/\*Pedido de orçamento · Khaus Brindes\*/.test(t) && /\*Total estimado: R\$/.test(t) && /\*Meus dados\*/.test(t), "mensagem com título, total e dados em negrito");
   ok(/Precisa até: \d{2}\/\d{2}\/\d{4}/.test(t), "mensagem traz a data do evento");
   console.log("\n--- mensagem ---\n" + t + "\n---");
   await p.screenshot({ path: path.join(SH, "carrinho-prazo.png") });

@@ -86,7 +86,9 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   const wa = await p.evaluate(() => window.__aberto[0] || "");
   const msg = decodeURIComponent((wa.split("text=")[1] || ""));
   ok(wa.startsWith("https://wa.me/5555999768527"), "abre o WhatsApp da Khaus");
-  ok(/KH-\d{4}-/.test(msg) && /Ref\. 19114-/.test(msg) && /100 un\./.test(msg) && /Total estimado/.test(msg) && /Teste Automático/.test(msg), "mensagem com código, referência, quantidade, total e nome");
+  ok(/Código: KH-\d{4}-/.test(msg) && /Ref\.: 19114-/.test(msg) && /100 un\. × R\$/.test(msg) && /\*Total estimado: R\$/.test(msg) && /\d+ produtos · \d+ unidades/.test(msg) && /Nome: Teste Automático/.test(msg), "mensagem com código, referência, quantidade, total, resumo e nome");
+  ok(/Economia pela quantidade: R\$/.test(msg), "mostra a economia pela quantidade");
+  ok(/Pedido de orçamento/.test(await p.$eval("#orcPrev", e => e.textContent)), "prévia da mensagem no resumo do orçamento");
   console.log("\n" + msg.split("\n").map(l => "     | " + l).join("\n") + "\n");
   // não vaza custo nem a palavra XBZ na página
   const html = await p.content();
