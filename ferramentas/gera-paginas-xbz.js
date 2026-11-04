@@ -80,7 +80,10 @@ ${cores.length ? `<div class="k">${cores.map(c => `<span>${esc(c)}</span>`).join
   for (const f of fs.readdirSync(DIR)) if (f.endsWith(".html") && !feitos.has(f)) { fs.unlinkSync(path.join(DIR, f)); removidas++; }
 
   const urls = [[SITE + "/", "1.0"], [SITE + "/catalogo", "0.9"]];
-  for (const f of fs.readdirSync(path.join(RAIZ, "p")).filter(f => f.endsWith(".html")).sort()) urls.push([`${SITE}/p/${f.slice(0, -5)}`, "0.8"]);
+  // produtos próprios: só os que estão visíveis no painel (ocultos saem do mapa do site)
+  let ativos = null;
+  try { const r = await fetch("https://cwsjddppdogvyitspbfr.supabase.co/rest/v1/khaus_produtos?select=id&ativo=eq.true", { headers: { apikey: "sb_publishable_zpNPLwlPqkOR6pnvrxRGHw_78r3siqN" } }); if (r.ok) ativos = new Set((await r.json()).map(x => x.id)); } catch (e) { }
+  for (const f of fs.readdirSync(path.join(RAIZ, "p")).filter(f => f.endsWith(".html")).sort()) { const id = f.slice(0, -5); if (!ativos || ativos.has(id)) urls.push([`${SITE}/p/${id}`, "0.8"]); }
   for (const f of [...feitos].sort()) urls.push([`${SITE}/c/${f.slice(0, -5)}`, "0.6"]);
   const hoje = new Date().toISOString().slice(0, 10);
   fs.writeFileSync(path.join(RAIZ, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
