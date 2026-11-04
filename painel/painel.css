@@ -518,3 +518,45 @@ a{color:var(--menta-d)}
   .cartao .acoes{grid-area:a;padding:0 10px 10px}
   .cartao .acoes .btn{min-height:38px}
 }
+
+/* ===== aba XBZ e preços ===== */
+.xsub{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 4px}
+.xsub a{padding:9px 14px;border-radius:999px;border:1px solid var(--borda-2);background:var(--branco);color:var(--tinta-2);text-decoration:none;font-size:14.5px;font-weight:500}
+.xsub a[aria-current="page"]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.xcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.xcards>div{border:1px solid var(--borda);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:3px;background:var(--fundo)}
+.xcards span{font-size:13px;color:var(--tinta-3)}
+.xcards b{font-size:19px}
+.xcards small{font-size:12.5px;color:var(--tinta-3)}
+.xacoes{display:flex;gap:10px;flex-wrap:wrap}
+.xform{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.xform .campo,.campo{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.xexemplo{font-size:14px;line-height:1.7;background:var(--fundo);border-radius:12px;padding:10px 14px}
+.xexemplo span{color:var(--tinta-3)}
+.xexemplo small{color:var(--tinta-3)}
+.xrot{font-size:15px}
+.xfaixas{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.xfaixa{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+.xfaixa .ent{width:96px;min-height:40px;padding:6px 10px;text-align:right}
+.xdet summary{cursor:pointer;font-weight:600;font-size:15px}
+.xcat-tab{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.xcat-cab,.xcat-l{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr));gap:8px;align-items:center;font-size:14px}
+.xcat-cab{font-size:12.5px;color:var(--tinta-3)}
+.xcat-l .ent{min-height:38px;padding:6px 10px;text-align:right}
+.xtab-wrap{overflow-x:auto;border:1px solid var(--borda);border-radius:12px}
+.xtab{width:100%;border-collapse:collapse;font-size:14px}
+.xtab th{text-align:left;font-weight:600;font-size:12.5px;color:var(--tinta-3);padding:10px 12px;border-bottom:1px solid var(--borda);background:var(--fundo);white-space:nowrap}
+.xtab td{padding:10px 12px;border-bottom:1px solid var(--borda);vertical-align:middle}
+.xtab tr:last-child td{border-bottom:0}
+.xtab .n{text-align:right;white-space:nowrap}
+.xtab small{display:block;color:var(--tinta-3);font-size:12.5px;margin-top:2px}
+.xtab img{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid var(--borda)}
+.xprod .mini-check{display:flex;align-items:center;gap:6px;font-size:13.5px;white-space:nowrap}
+.xoculto td{opacity:.55}
+.xok{color:var(--menta-d,#0B7A57);font-weight:600}
+.xerro{color:#B42318;font-weight:600}
+.xpag{display:flex;align-items:center;justify-content:center;gap:14px;font-size:14px}
+.xq{width:90px;min-height:36px;padding:4px 8px;text-align:right}
+.xtotal{font-size:15px;margin:4px 0 0}
+.link{background:none;border:0;padding:0;color:var(--azul);text-decoration:underline;cursor:pointer;font:inherit}
+@media (max-width:720px){.xcat-cab{display:none}.xcat-l{grid-template-columns:1fr 1fr 1fr}.xcat-l span{grid-column:1/-1;font-weight:600}}

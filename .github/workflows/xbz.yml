@@ -1,0 +1,17 @@
+# Atualiza o catálogo da XBZ no site da Khaus: chama a função khaus-xbz de hora em hora (7h às 21h de Brasília).
+# A própria função decide se roda: no máximo a cada 110 minutos e só até 8 das 12 consultas diárias da XBZ.
+name: Catálogo XBZ
+on:
+  schedule:
+    - cron: "5 10-23 * * *"
+    - cron: "5 0 * * *"
+  workflow_dispatch:
+jobs:
+  atualiza:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Chamar a função de atualização
+        run: |
+          curl -sS -m 170 -X POST "https://cwsjddppdogvyitspbfr.supabase.co/functions/v1/khaus-xbz" \
+            -H "Content-Type: application/json" -d '{"acao":"auto"}'

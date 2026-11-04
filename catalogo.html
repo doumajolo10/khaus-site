@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Catálogo completo de brindes · Khaus Brindes Corporativos</title>
+<meta name="description" content="Mais de 3.500 brindes personalizados com estoque atualizado: copos, garrafas, canetas, mochilas, kits e muito mais. Monte o orçamento e receba pelo WhatsApp.">
+<meta name="theme-color" content="#0F1117">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="Catálogo completo · Khaus Brindes Corporativos">
+<meta property="og:description" content="Mais de 3.500 brindes com estoque atualizado. Escolha a cor, a quantidade e receba o orçamento no WhatsApp.">
+<meta property="og:image" content="og.jpg">
+<link rel="preconnect" href="https://cdn.xbzbrindes.com.br" crossorigin>
+<link rel="preconnect" href="https://cwsjddppdogvyitspbfr.supabase.co" crossorigin>
+<link rel="preload" href="fonts/Archivo-latin-2.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/Outfit-latin-8.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="cat/catalogo.css">
+<script>(function(){try{var t=localStorage.getItem("khaus-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+</head>
+<body>
+<a class="pular" href="#grade">Pular para os produtos</a>
+
+<header class="topo" id="topo">
+  <div class="topo-in">
+    <a class="marca" href="./" aria-label="Khaus Brindes Corporativos, página inicial">
+      <img class="lg lg-claro" src="logo/khaus-logo-claro-600.webp" alt="Khaus Brindes Corporativos" width="600" height="207">
+      <img class="lg lg-escuro" src="logo/khaus-logo-escuro-600.webp" alt="" aria-hidden="true" width="600" height="207">
+    </a>
+    <form class="busca" id="busca" role="search" onsubmit="return false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <input id="q" type="search" placeholder="Buscar: copo térmico, caneta, mochila…" autocomplete="off" aria-label="Buscar produtos" enterkeyhint="search">
+      <button type="button" class="limpa" id="qLimpa" aria-label="Limpar busca" hidden>×</button>
+    </form>
+    <div class="topo-acoes">
+      <button class="ico" id="tema" type="button" aria-label="Alternar tema claro ou escuro">
+        <svg class="sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="lua" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <button class="orc-btn" id="orcBtn" type="button" aria-label="Abrir orçamento">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>
+        <span>Orçamento</span><b id="orcN">0</b>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="abre" aria-labelledby="tit">
+    <div class="abre-in">
+      <p class="sobre"><span class="ponto" aria-hidden="true"></span><span id="atualizado">Carregando estoque…</span></p>
+      <h1 id="tit">Catálogo completo<span class="sub" id="totalTit"></span></h1>
+      <p class="lead">Escolha o produto, a cor e a quantidade. A Khaus grava sua marca e envia o orçamento pelo WhatsApp.</p>
+    </div>
+    <nav class="cats" id="cats" aria-label="Categorias"></nav>
+  </section>
+
+  <div class="miolo">
+    <aside class="filtros" id="filtros" aria-label="Filtros">
+      <div class="f-topo"><b>Filtros</b><button type="button" class="f-fecha" id="fFecha" aria-label="Fechar filtros">×</button></div>
+      <div class="f-grupo">
+        <label class="f-tit" for="qtd">Quantas unidades você precisa?</label>
+        <div class="qtd-campo"><input id="qtd" type="number" inputmode="numeric" min="1" step="1" placeholder="Ex.: 100"><span>un.</span></div>
+        <p class="f-ajuda">Mostra só o que tem essa quantidade em estoque, com o preço dessa faixa.</p>
+      </div>
+      <div class="f-grupo">
+        <span class="f-tit">Disponibilidade</span>
+        <label class="chave"><input type="checkbox" id="soEstoque" checked><span></span>Só com estoque</label>
+        <label class="chave"><input type="checkbox" id="soPonta"><span></span>Ponta de estoque e edição limitada</label>
+      </div>
+      <div class="f-grupo">
+        <span class="f-tit">Preço por unidade</span>
+        <div class="pills" id="precos"></div>
+      </div>
+      <div class="f-grupo">
+        <span class="f-tit">Cor</span>
+        <div class="cores-f" id="coresF"></div>
+      </div>
+      <button type="button" class="f-limpar" id="fLimpar">Limpar filtros</button>
+      <button type="button" class="f-ver" id="fVer">Ver produtos</button>
+    </aside>
+
+    <section class="lista" aria-live="polite">
+      <div class="lista-topo">
+        <button type="button" class="f-abre" id="fAbre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filtros<b id="fN" hidden></b></button>
+        <p class="conta" id="conta"></p>
+        <label class="ordem"><span>Ordenar</span>
+          <select id="ordem">
+            <option value="rel">Mais relevantes</option>
+            <option value="menor">Menor preço</option>
+            <option value="maior">Maior preço</option>
+            <option value="estoque">Mais estoque</option>
+            <option value="az">Nome (A–Z)</option>
+          </select>
+        </label>
+      </div>
+      <div class="ativos" id="ativos"></div>
+      <div class="grade" id="grade"></div>
+      <div class="vazio" id="vazio" hidden>
+        <b>Nada encontrado com esses filtros.</b>
+        <p>Tente outra palavra ou fale com a gente: a Khaus também consegue produtos fora do catálogo.</p>
+        <a class="btn btn-wa" id="vazioWa" target="_blank" rel="noopener">Pedir no WhatsApp</a>
+      </div>
+      <div class="mais" id="mais"><span class="giro" aria-hidden="true"></span></div>
+    </section>
+  </div>
+</main>
+
+<footer class="rodape">
+  <div class="rod-in">
+    <div><b>Khaus Brindes Corporativos</b><span>CNPJ 46.540.014/0001-07 · São Martinho, RS</span></div>
+    <div><a href="https://wa.me/5555999768527" target="_blank" rel="noopener">(55) 99976-8527</a><a href="mailto:khausbrindes@gmail.com">khausbrindes@gmail.com</a><a href="https://instagram.com/khausbrindes" target="_blank" rel="noopener">@khausbrindes</a></div>
+    <p>Fotos ilustrativas; cores e medidas podem variar. Estoque atualizado ao longo do dia e confirmado no orçamento.</p>
+  </div>
+</footer>
+
+<!-- ficha do produto -->
+<div class="modal" id="ficha" role="dialog" aria-modal="true" aria-labelledby="fichaNome" hidden>
+  <div class="modal-fundo" data-fecha></div>
+  <article class="ficha">
+    <button type="button" class="x" data-fecha aria-label="Fechar">×</button>
+    <div class="fi-galeria">
+      <div class="fi-foto" id="fiFoto"></div>
+      <div class="fi-miniaturas" id="fiMinis"></div>
+    </div>
+    <div class="fi-info">
+      <p class="fi-cat" id="fiCat"></p>
+      <h2 id="fichaNome"></h2>
+      <div class="fi-preco" id="fiPreco"></div>
+      <div class="fi-bloco">
+        <div class="fi-rot"><span>Cor</span><b id="fiCorNome"></b></div>
+        <div class="fi-cores" id="fiCores" role="radiogroup" aria-label="Cor"></div>
+        <p class="fi-estoque" id="fiEstoque"></p>
+      </div>
+      <div class="fi-bloco">
+        <div class="fi-rot"><span>Quantidade</span><em id="fiMin"></em></div>
+        <div class="fi-qtd">
+          <button type="button" id="fiMenos" aria-label="Menos">−</button>
+          <input id="fiQ" type="number" inputmode="numeric" min="1" aria-label="Quantidade">
+          <button type="button" id="fiMais" aria-label="Mais">+</button>
+        </div>
+        <div class="faixas" id="fiFaixas"></div>
+        <p class="fi-aviso" id="fiAviso" hidden></p>
+      </div>
+      <div class="fi-total"><span>Total estimado</span><b id="fiTotal">—</b></div>
+      <button type="button" class="btn btn-pri" id="fiAdd">Adicionar ao orçamento</button>
+      <p class="fi-demo" id="fiDemo" hidden>Valores de demonstração. O preço final vem no orçamento.</p>
+      <details class="fi-det" id="fiDetalhes" open>
+        <summary>Detalhes do produto</summary>
+        <p id="fiDesc"></p>
+        <dl id="fiMed"></dl>
+      </details>
+      <ul class="fi-garante">
+        <li>Gravação da sua marca a laser ou em cores</li>
+        <li>Arte digital para aprovar antes de produzir</li>
+        <li>Envio para todo o Brasil</li>
+      </ul>
+    </div>
+  </article>
+</div>
+
+<!-- orçamento -->
+<div class="gaveta" id="orc" role="dialog" aria-modal="true" aria-labelledby="orcTit" hidden>
+  <div class="modal-fundo" data-fecha></div>
+  <aside class="gav">
+    <div class="gav-topo"><h2 id="orcTit">Seu orçamento</h2><button type="button" class="x" data-fecha aria-label="Fechar">×</button></div>
+    <div class="gav-itens" id="orcItens"></div>
+    <form class="gav-form" id="orcForm" onsubmit="return false">
+      <div class="gav-total"><span>Total estimado</span><b id="orcTotal">R$ 0,00</b></div>
+      <p class="fi-demo" id="orcDemo" hidden>Valores de demonstração. O preço final vem no orçamento.</p>
+      <div class="campos">
+        <label>Seu nome<input id="oNome" autocomplete="name" required></label>
+        <label>Empresa<input id="oEmpresa" autocomplete="organization"></label>
+        <label>Cidade<input id="oCidade" autocomplete="address-level2"></label>
+        <label>Precisa até<input id="oData" type="date"></label>
+      </div>
+      <label class="gav-obs">Observações<textarea id="oObs" rows="2" placeholder="Ex.: gravar o logo dos dois lados"></textarea></label>
+      <button type="button" class="btn btn-wa" id="orcEnviar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>Enviar pelo WhatsApp</button>
+      <p class="gav-nota">Abrimos a conversa com o pedido pronto. Lá você manda o logo da empresa.</p>
+    </form>
+  </aside>
+</div>
+
+<div class="aviso-toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="cat/catalogo.js"></script>
+</body>
+</html>

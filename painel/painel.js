@@ -323,7 +323,7 @@
   // =====================================================================
   function casca(conteudo, aba) {
     const nome = (E.equipe && E.equipe.nome) || (sessao && sessao.email) || "";
-    const abas = [["", "Produtos", I.lista], ["estoque", "Estoque", I.caixa], ["ajustes", "Prazos e ajustes", I.ajustes]];
+    const abas = [["", "Produtos", I.lista], ["estoque", "Estoque", I.caixa], ["xbz", "XBZ e preços", I.envia], ["ajustes", "Prazos e ajustes", I.ajustes]];
     return `${DEMO ? '<div class="demo-faixa">Modo demonstração: as alterações ficam só neste navegador e não vão para o site.</div>' : ""}
 <header class="topo">
   <a class="marca" href="#" data-ir=""><img src="/logo/khaus-logo-claro-600.webp" width="600" height="190" alt="Khaus"><span>Painel</span></a>
@@ -387,6 +387,7 @@
     if (h === "novo") return editor(null);
     if (h === "estoque") return telaEstoque();
     if (h === "ajustes") return telaAjustes();
+    if ((h === "xbz" || h.startsWith("xbz/")) && window.KhausXbz) return window.KhausXbz.tela(h);
     const m = /^editar\/([a-z0-9-]+)$/.exec(h);
     if (m) { const x = E.lista.find(y => y.id === m[1]); if (x) return editor(x); aviso("Produto não encontrado.", { erro: true }); history.replaceState(null, "", location.pathname + location.search); }
     telaLista();
@@ -816,6 +817,6 @@ ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão m
     if (!sessao) return telaEntrada();
     iniciaSessao();
   }
-  window.KhausPainel = { E, api, versao: 1 };
+  window.KhausPainel = { E, api, versao: 2, S, DEMO, SITE_PUB, app, $, $, esc, sem, BRL, num, I, casca, ligaCasca, rest, token, renova, aviso, dialogo, mostraErroDialogo, trataErro, dataBR };
   inicio();
 })();
