@@ -130,7 +130,8 @@ function capa(cat) {
 
 /* ---------- topo, categorias e filtros ---------- */
 function montaTopo() {
-  $("#totalTit").textContent = int(TODOS.length) + " brindes para gravar a sua marca";
+  const comEst = TODOS.filter(p => p.est !== 0).length;
+  $("#totalTit").textContent = "Mais de " + int(Math.max(100, Math.floor(comEst / 100) * 100)) + " brindes para gravar a sua marca";
   if (VERSAO) {
     const d = new Date(VERSAO), hoje = new Date();
     const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });

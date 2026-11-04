@@ -73,7 +73,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 
   // segundo item, produto próprio da Khaus
   await p.click("#qLimpa"); await espera(300);
-  await p.type("#q", "kit churrasco 5"); await espera(500);
+  await p.evaluate(() => { const c = [...document.querySelectorAll(".cat")].find(b => b.dataset.cat === ""); c && c.click(); }); await espera(500);
   const kh = await p.$('.card[data-id^="k-"] .c-foto');
   if (kh) { await kh.click(); await espera(400); await p.click("#fiAdd"); await espera(300); }
   ok(await p.$eval("#orcN", e => e.textContent) === "2", "produto da Khaus também entra no orçamento");

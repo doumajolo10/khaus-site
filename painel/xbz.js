@@ -111,8 +111,10 @@
       <div class="xfaixas" id="x-faixas">${R.faixas.map((f, i) => faixaHtml(f, i)).join("")}</div>
       <button type="button" class="btn btn-linha" id="x-faixa-mais">${k.I.mais}Incluir faixa</button></div>
     <details class="xdet"><summary>Margem diferente por categoria</summary><p class="dica">Deixe em branco para usar a regra geral.</p>
-      <div class="xcat-tab"><div class="xcat-cab"><span>Categoria</span><span>Multiplicar por</span><span>Somar R$</span><span>Mínimo</span></div>
-      ${cats.map(id => { const c = (R.categorias || {})[id] || {}; return `<div class="xcat-l" data-cat="${id}"><span>${esc(C.CAT_NOME[id])}</span><input class="ent num" data-k="multiplicador" type="number" step="0.05" value="${c.multiplicador ?? ""}" placeholder="${R.multiplicador}" aria-label="Multiplicador de ${esc(C.CAT_NOME[id])}"><input class="ent num" data-k="acrescimo" type="number" step="0.10" value="${c.acrescimo ?? ""}" placeholder="${R.acrescimo}" aria-label="Acréscimo de ${esc(C.CAT_NOME[id])}"><input class="ent num" data-k="minimo" type="number" step="1" value="${c.minimo ?? ""}" placeholder="${R.minimo}" aria-label="Mínimo de ${esc(C.CAT_NOME[id])}"></div>`; }).join("")}</div></details>
+      <div class="xcat-tab"><div class="xcat-cab"><span>Categoria</span><span>Multiplicar por</span><span>Somar R$</span></div>
+      ${cats.map(id => { const c = (R.categorias || {})[id] || {}; return `<div class="xcat-l" data-cat="${id}"><span>${esc(C.CAT_NOME[id])}</span><input class="ent num" data-k="multiplicador" type="number" step="0.05" value="${c.multiplicador ?? ""}" placeholder="${R.multiplicador}" aria-label="Multiplicador de ${esc(C.CAT_NOME[id])}"><input class="ent num" data-k="acrescimo" type="number" step="0.10" value="${c.acrescimo ?? ""}" placeholder="${R.acrescimo}" aria-label="Acréscimo de ${esc(C.CAT_NOME[id])}"></div>`; }).join("")}</div></details>
+    <div><b class="xrot">Quantidade mínima por categoria</b><p class="dica">Quantas unidades o cliente precisa pedir em cada categoria. Em branco, vale a quantidade mínima geral (${R.minimo} un.). Um produto também pode ter o mínimo próprio em “Produtos da XBZ”.</p>
+      <div class="xmin-grade">${cats.map(id => { const c = (R.categorias || {})[id] || {}; return `<label class="xmin-l" data-cat="${id}"><span>${esc(C.CAT_NOME[id])}</span><input class="ent num" data-k="minimo" type="number" min="1" step="1" value="${c.minimo ?? ""}" placeholder="${R.minimo}"></label>`; }).join("")}</div></div>
     <label class="interruptor"><input type="checkbox" name="esconderSemEstoque"${R.esconderSemEstoque ? " checked" : ""}><span>Esconder do site os produtos sem estoque e sem data de reposição</span></label>
     <label class="interruptor"><input type="checkbox" name="demo"${R.demo ? " checked" : ""}><span>Mostrar no site que os preços são <b>valores de demonstração</b> (vale para todos os produtos)</span></label>
   </div>
@@ -142,7 +144,7 @@
     r.final90 = v("final90").checked; r.demo = v("demo").checked; r.esconderSemEstoque = v("esconderSemEstoque").checked;
     r.faixas = $$(".xfaixa", f).map(l => [Math.round(+$("[data-fq]", l).value || 0), +$("[data-fp]", l).value || 0]).filter(x => x[0] > 0).sort((a, b) => a[0] - b[0]);
     r.categorias = {};
-    $$(".xcat-l", f).forEach(l => { const o = {}; $$("input", l).forEach(i => { if (i.value !== "") o[i.dataset.k] = +i.value; }); if (Object.keys(o).length) r.categorias[l.dataset.cat] = o; });
+    $$(".xcat-l, .xmin-l", f).forEach(l => { const o = r.categorias[l.dataset.cat] || {}; $$("input", l).forEach(i => { if (i.value !== "") o[i.dataset.k] = i.dataset.k === "minimo" ? Math.max(1, Math.round(+i.value)) : +i.value; }); if (Object.keys(o).length) r.categorias[l.dataset.cat] = o; });
     return r;
   }
   function exemplo() {
@@ -199,7 +201,8 @@
     if (a.minimo) regra.minimo = +a.minimo;
     const vs = it.v.filter(v => v.custo > 0);
     const custo = vs.length ? Math.min(...vs.map(v => v.custo)) : 0;
-    return { it, a, cat, custo, preco: C.precoVenda(custo, regra), min: regra.minimo, est: it.v.reduce((s, v) => s + v.est, 0), img: (it.v.find(v => v.img) || {}).img, nome: a.nome || C.nomeBonito(it.nome) };
+    const calc = C.precoVenda(custo, regra), fixo = Number(a.preco) > 0;
+    return { it, a, cat, custo, calc, fixo, preco: fixo ? Number(a.preco) : calc, min: regra.minimo, est: it.v.reduce((s, v) => s + v.est, 0), img: (it.v.find(v => v.img) || {}).img, nome: a.nome || C.nomeBonito(it.nome) };
   }
   function produtos() {
     const k = K();
@@ -213,7 +216,7 @@
     <select class="ent" id="xp-vis" aria-label="Situação"><option value="">Todos</option><option value="visivel"${X.f.vis === "visivel" ? " selected" : ""}>Aparecem no site</option><option value="oculto"${X.f.vis === "oculto" ? " selected" : ""}>Ocultos no site</option><option value="destaque"${X.f.vis === "destaque" ? " selected" : ""}>Em destaque</option><option value="ajustado"${X.f.vis === "ajustado" ? " selected" : ""}>Com margem própria</option><option value="sem"${X.f.vis === "sem" ? " selected" : ""}>Sem estoque</option></select></div>
   <div class="xsel" id="xp-sel" hidden></div>
   <p class="dica" id="xp-conta"></p>
-  <div class="xtab-wrap"><table class="xtab xprod"><thead><tr><th><input type="checkbox" id="xp-todos" aria-label="Selecionar os produtos desta página"></th><th></th><th>Produto</th><th class="n">Custo</th><th class="n">No site</th><th class="n">Estoque</th><th>No site</th><th></th></tr></thead><tbody id="xp-l"></tbody></table></div>
+  <div class="xtab-wrap"><table class="xtab xprod"><thead><tr><th><input type="checkbox" id="xp-todos" aria-label="Selecionar os produtos desta página"></th><th></th><th>Produto</th><th class="n">Custo</th><th class="n">Preço no site</th><th class="n">Estoque</th><th>No site</th><th></th></tr></thead><tbody id="xp-l"></tbody></table></div>
   <div class="xpag" id="xp-pag"></div>
 </div></section>`);
     let filtrados = [], pagAtual = [];
@@ -230,7 +233,7 @@
         <td><input type="checkbox" data-sel${X.sel.has(r.it.cod) ? " checked" : ""} aria-label="Selecionar ${esc(r.nome)}"></td>
         <td><img src="${foto(r.img)}" alt="" width="48" height="48" loading="lazy"></td>
         <td><b>${esc(r.nome)}</b><small>${esc(r.it.cod)} · ${esc(C.CAT_NOME[r.cat])}${r.a.multiplicador != null || r.a.acrescimo != null ? " · margem própria" : ""}${r.a.oculto ? " · <b>oculto</b>" : ""}</small></td>
-        <td class="n">${k.BRL(r.custo)}</td><td class="n"><b>${k.BRL(r.preco)}</b><small>mín. ${r.min}</small></td>
+        <td class="n">${k.BRL(r.custo)}</td><td class="n xpreco-c"><input class="ent num xpreco${r.fixo ? " fixo" : ""}" data-preco inputmode="decimal" value="${r.fixo ? r.preco.toFixed(2).replace(".", ",") : ""}" placeholder="${r.calc.toFixed(2).replace(".", ",")}" aria-label="Preço no site de ${esc(r.nome)}"><small>${r.fixo ? "preço manual" : "pela regra"} · mín. ${r.min}</small></td>
         <td class="n">${r.est ? k.num(r.est) : '<span class="xerro">0</span>'}</td>
         <td><label class="mini-check"><input type="checkbox" data-vis${r.a.oculto ? "" : " checked"}> Aparece</label><label class="mini-check"><input type="checkbox" data-dest${r.a.destaque ? " checked" : ""}> Destaque</label></td>
         <td><button type="button" class="ico-btn" data-ed aria-label="Ajustar ${esc(r.nome)}">${k.I.editar}</button></td></tr>`).join("") || '<tr><td colspan="8">Nenhum produto.</td></tr>';
@@ -244,7 +247,7 @@
       box.hidden = !n && filtrados.length === X.en.length;
       box.innerHTML = (n ? `<b>${k.num(n)} selecionado${n === 1 ? "" : "s"}</b>` : `<span>Nenhum selecionado</span>`) +
         (filtrados.length && filtrados.length !== n ? `<button type="button" class="link" data-acao="filtrados">Selecionar os ${k.num(filtrados.length)} desta busca</button>` : "") +
-        (n ? `<span class="xsel-acoes"><button type="button" class="btn btn-linha" data-acao="ocultar">${k.I.olhoNao}Ocultar do site</button><button type="button" class="btn btn-linha" data-acao="mostrar">${k.I.olho}Mostrar no site</button><button type="button" class="btn btn-linha" data-acao="destacar">Destacar</button><button type="button" class="btn btn-linha" data-acao="tirar">Tirar destaque</button>
+        (n ? `<span class="xsel-acoes"><button type="button" class="btn btn-linha" data-acao="ocultar">${k.I.olhoNao}Ocultar do site</button><button type="button" class="btn btn-linha" data-acao="mostrar">${k.I.olho}Mostrar no site</button><button type="button" class="btn btn-linha" data-acao="destacar">Destacar</button><button type="button" class="btn btn-linha" data-acao="tirar">Tirar destaque</button><button type="button" class="btn btn-linha" data-acao="regra">Voltar ao preço da regra</button>
           <select class="ent" data-acao="categoria" aria-label="Mudar a categoria dos selecionados"><option value="">Mudar categoria…</option>${cats.map(id => `<option value="${id}">${esc(C.CAT_NOME[id])}</option>`).join("")}</select>
           <button type="button" class="link" data-acao="limpar">Limpar seleção</button></span>` : "");
     };
@@ -256,6 +259,16 @@
     $("#xp-l").addEventListener("change", async e => {
       const tr = e.target.closest("tr"), cod = tr.dataset.cod;
       if (e.target.matches("[data-sel]")) { e.target.checked ? X.sel.add(cod) : X.sel.delete(cod); tr.classList.toggle("xmarcado", e.target.checked); const tp = pagAtual.every(r => X.sel.has(r.it.cod)); $("#xp-todos").checked = tp; $("#xp-todos").indeterminate = !tp && pagAtual.some(r => X.sel.has(r.it.cod)); pintaSel(); return; }
+      if (e.target.matches("[data-preco]")) {
+        const txt = e.target.value.trim().replace(/[^\d,.]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
+        const v = txt === "" ? null : Math.round(Number(txt) * 100) / 100;
+        const r = linhaProd(X.en.find(x => x.cod === cod));
+        if (v != null && !(v > 0)) { k.aviso("Preço inválido.", { erro: true }); return pinta(); }
+        if (v != null && v < r.custo) { k.aviso(`Esse preço fica abaixo do custo da XBZ (${k.BRL(r.custo)}). Não salvei.`, { erro: true }); return pinta(); }
+        await gravaAjuste(cod, { preco: v });
+        k.aviso(v == null ? "Voltou ao preço da regra." : `Preço de ${k.BRL(v)} salvo. O site atualiza em instantes.`);
+        return pinta();
+      }
       if (e.target.matches("[data-vis]")) await gravaAjuste(cod, { oculto: !e.target.checked });
       if (e.target.matches("[data-dest]")) await gravaAjuste(cod, { destaque: e.target.checked });
       pinta();
@@ -277,6 +290,7 @@
       if (a === "mostrar") return emLote({ oculto: false }, "Mostrar", b);
       if (a === "destacar") return emLote({ destaque: true }, "Destacar", b);
       if (a === "tirar") return emLote({ destaque: false }, "Tirar o destaque de", b);
+      if (a === "regra") return emLote({ preco: null }, "Voltar ao preço da regra em", b);
     });
     $("#xp-sel").addEventListener("change", async e => {
       const s = e.target.closest("select[data-acao='categoria']"); if (!s || !s.value) return;
@@ -316,13 +330,16 @@
       corpo: `<p class="dica">${esc(it.nome)} · ${esc(cod)} · custo a partir de ${k.BRL(r.custo)}</p>
       <div class="campo"><label for="xe-nome">Nome no site</label><input class="ent" id="xe-nome" value="${esc(a.nome || "")}" placeholder="${esc(C.nomeBonito(it.nome))}"></div>
       <div class="campo"><label for="xe-cat">Categoria</label><select class="ent" id="xe-cat">${cats.map(id => `<option value="${id}"${r.cat === id ? " selected" : ""}>${esc(C.CAT_NOME[id])}</option>`).join("")}</select></div>
-      <div class="xform"><div class="campo"><label for="xe-mult">Multiplicar por</label><input class="ent num" id="xe-mult" type="number" step="0.05" value="${a.multiplicador ?? ""}" placeholder="regra geral"></div>
+      <div class="xform"><div class="campo"><label for="xe-preco">Preço no site (R$)</label><input class="ent num" id="xe-preco" inputmode="decimal" value="${Number(a.preco) > 0 ? Number(a.preco).toFixed(2).replace(".", ",") : ""}" placeholder="${r.calc.toFixed(2).replace(".", ",")} pela regra"></div>
+      <div class="campo"><label for="xe-mult">Multiplicar por</label><input class="ent num" id="xe-mult" type="number" step="0.05" value="${a.multiplicador ?? ""}" placeholder="regra geral"></div>
       <div class="campo"><label for="xe-acr">Somar R$</label><input class="ent num" id="xe-acr" type="number" step="0.10" value="${a.acrescimo ?? ""}" placeholder="regra geral"></div>
       <div class="campo"><label for="xe-min">Mínimo</label><input class="ent num" id="xe-min" type="number" step="1" value="${a.minimo || ""}" placeholder="${r.min}"></div></div>
       <p class="dica">Cores: ${it.v.map(v => `${esc(v.cor)} (${k.num(v.est)})`).join(", ")}</p>`,
       botoes: [{ texto: "Cancelar", valor: null }, { texto: "Salvar", classe: "btn-azul", valor: "ok", antes: async veu => {
         const v = id => $(id, veu).value.trim();
-        const mud = { nome: v("#xe-nome") || null, categoria: v("#xe-cat") === C.categoria(it.nome) ? null : v("#xe-cat"), multiplicador: v("#xe-mult") === "" ? null : +v("#xe-mult"), acrescimo: v("#xe-acr") === "" ? null : +v("#xe-acr"), minimo: v("#xe-min") === "" ? null : Math.round(+v("#xe-min")) };
+        const pTxt = v("#xe-preco").replace(/[^\d,.]/g, "").replace(",", "."), preco = pTxt === "" ? null : Math.round(Number(pTxt) * 100) / 100;
+        if (preco != null && !(preco >= r.custo)) throw new Error(`O preço precisa ser maior que o custo da XBZ (${k.BRL(r.custo)}).`);
+        const mud = { preco, nome: v("#xe-nome") || null, categoria: v("#xe-cat") === C.categoria(it.nome) ? null : v("#xe-cat"), multiplicador: v("#xe-mult") === "" ? null : +v("#xe-mult"), acrescimo: v("#xe-acr") === "" ? null : +v("#xe-acr"), minimo: v("#xe-min") === "" ? null : Math.round(+v("#xe-min")) };
         if (mud.multiplicador != null && mud.multiplicador < 1) throw new Error("O multiplicador precisa ser 1 ou mais.");
         await gravaAjuste(cod, mud); return true;
       } }]

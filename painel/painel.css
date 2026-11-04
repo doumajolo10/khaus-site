@@ -573,3 +573,10 @@ a{color:var(--menta-d)}
 .xprod th:first-child,.xprod td:first-child{width:36px}
 .xprod input[type=checkbox]{width:18px;height:18px;accent-color:var(--menta-d,#0B7A57)}
 .xmarcado td{background:#F2FBF7}
+
+.xpreco-c{min-width:130px}
+.xpreco{width:110px;min-height:36px;padding:4px 8px;text-align:right;font-weight:600}
+.xpreco.fixo{border-color:var(--menta-d,#0B7A57);background:#F2FBF7}
+.xmin-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
+.xmin-l{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;padding:6px 6px 6px 12px;border:1px solid var(--borda);border-radius:10px;background:var(--fundo)}
+.xmin-l .ent{width:80px;min-height:36px;padding:4px 8px;text-align:right}

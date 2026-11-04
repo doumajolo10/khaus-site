@@ -175,7 +175,7 @@ export function capaDe(produtos, cat) {
   return melhor || quase;
 }
 
-// Catálogo público (sem custo). ajustes = { cod: {categoria, oculto, destaque, nome, multiplicador, acrescimo, minimo} }
+// Catálogo público (sem custo). ajustes = { cod: {categoria, oculto, destaque, nome, preco, multiplicador, acrescimo, minimo} }
 export function montaCatalogo(enxuto, regras, ajustes, quando) {
   const R = Object.assign({}, REGRAS_PADRAO, regras || {});
   const aj = ajustes || {};
@@ -195,7 +195,8 @@ export function montaCatalogo(enxuto, regras, ajustes, quando) {
     if (a.acrescimo != null && a.acrescimo !== "") regra.acrescimo = Number(a.acrescimo);
     if (a.minimo) regra.minimo = Math.max(1, Math.round(Number(a.minimo)));
     const custo = Math.min(...vars.map(v => v.custo));
-    const preco = precoVenda(custo, regra);
+    // preço escolhido à mão no painel vale no lugar da regra de margem
+    const preco = Number(a.preco) > 0 ? Math.round(Number(a.preco) * 100) / 100 : precoVenda(custo, regra);
     const estoque = vars.reduce((s, v) => s + v.est, 0);
     if (R.esconderSemEstoque && !estoque && !vars.some(v => v.rep)) continue;
     // cores repetidas (mesmo nome) viram uma só, somando estoque
@@ -228,6 +229,6 @@ export function montaCatalogo(enxuto, regras, ajustes, quando) {
   return {
     catalogo: { v, cdn: CDN, faixas: R.faixas, demo: !!R.demo, cats, p },
     descricoes: desc,
-    resumo: { v, total: p.length, cats: cats.map(([id, nome, n]) => [id, nome, n, capa[id] ? (capa[id].k.find(k => k[2] > 0) || capa[id].k[0])[1] : ""]) }
+    resumo: { v, total: p.length, emEstoque: p.filter(x => x.e > 0).length, cats: cats.map(([id, nome, n]) => [id, nome, n, capa[id] ? (capa[id].k.find(k => k[2] > 0) || capa[id].k[0])[1] : ""]) }
   };
 }
