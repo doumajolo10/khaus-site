@@ -560,3 +560,16 @@ a{color:var(--menta-d)}
 .xtotal{font-size:15px;margin:4px 0 0}
 .link{background:none;border:0;padding:0;color:var(--azul);text-decoration:underline;cursor:pointer;font:inherit}
 @media (max-width:720px){.xcat-cab{display:none}.xcat-l{grid-template-columns:1fr 1fr 1fr}.xcat-l span{grid-column:1/-1;font-weight:600}}
+
+.xpend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.xpend li{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:#FFF6E5;border:1px solid #F3D9A4;font-size:14.5px}
+.xpend a{font-weight:600;color:var(--tinta);white-space:nowrap}
+
+.xsel{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 14px;border-radius:12px;background:var(--azul-3,#E5F6EF);font-size:14.5px}
+.xsel-acoes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.xsel .btn{min-height:38px;padding:6px 12px;font-size:14px}
+.xsel .btn svg{width:17px;height:17px}
+.xsel select.ent{width:auto;min-height:38px;padding:6px 34px 6px 10px}
+.xprod th:first-child,.xprod td:first-child{width:36px}
+.xprod input[type=checkbox]{width:18px;height:18px;accent-color:var(--menta-d,#0B7A57)}
+.xmarcado td{background:#F2FBF7}

@@ -3,7 +3,7 @@
   --bg:#F5F6F9;--sf:#FFFFFF;--sf2:#EEF0F4;--ln:#E3E5EC;--ln2:#CDD1DB;
   --tx:#0F1117;--tx2:#454A5A;--mut:#646979;
   --mint:#6AD4AE;--mintd:#0B7A57;--mintbg:#E3F6EE;
-  --btn:#0F1117;--btnTx:#fff;--wa:#1FAF55;--alerta:#9A5B00;--alertabg:#FFF4DF;--sem:#A33A2B;
+  --btn:#0F1117;--btnTx:#fff;--wa:#0E7A3E;--alerta:#9A5B00;--alertabg:#FFF4DF;--sem:#A33A2B;
   --foto:#FFFFFF;--sombra:0 1px 2px rgba(15,17,23,.05),0 8px 24px -12px rgba(15,17,23,.12);
   --fd:"Archivo",system-ui,sans-serif;--fb:"Outfit",system-ui,sans-serif;--fm:"Chivo Mono",ui-monospace,monospace;
   --r:16px;--ease:cubic-bezier(.22,1,.36,1);--maxw:1440px;
@@ -330,3 +330,12 @@ html[data-theme="dark"] .bol,html[data-theme="dark"] .cor-f i,html[data-theme="d
   .cat{height:46px}
   .cat img{width:34px;height:34px}
 }
+
+/* prazo de produção na ficha */
+.pzs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.pzc{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:9px 11px;border-radius:10px;border:1px solid var(--ln);text-align:left}
+.pzc b{font-weight:600;font-size:14.5px}
+.pzc span{font-size:12.5px;color:var(--mut)}
+.pzc em{font-style:normal;font-size:12.5px;color:var(--mintd);font-weight:600}
+.pzc[aria-pressed="true"]{border-color:var(--mintd);background:var(--mintbg)}
+.fi-nota{margin:2px 0 0;font-size:12.5px;color:var(--mut)}

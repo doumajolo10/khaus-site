@@ -31,16 +31,17 @@
   /* ---------- casca da aba ---------- */
   function pagina(sub, html) {
     const k = K();
-    const subs = [["xbz", "Visão geral e preços"], ["xbz/produtos", "Produtos da XBZ"], ["xbz/pedidos", "Pedidos na XBZ"]];
-    k.app.innerHTML = k.casca(`<div class="cab-lista"><div><h1>XBZ e preços</h1><p class="sub">Catálogo da XBZ ligado ao site: estoque atualizado sozinho, preço calculado pela sua margem.</p></div></div>
+    const subs = [["xbz", "Visão geral e preços"], ["xbz/produtos", "Produtos da XBZ"], ["xbz/repetidos", "Repetidos" + (X.nRep ? ` (${X.nRep})` : "")], ["xbz/pedidos", "Pedidos na XBZ"]];
+    const ehProd = sub === "xbz/produtos";
+    k.app.innerHTML = k.casca(`<div class="cab-lista"><div><h1>${ehProd ? "Produtos da XBZ" : "XBZ e preços"}</h1><p class="sub">${ehProd ? "Todos os produtos que vêm da XBZ: custo, preço no site e estoque. Marque vários para ocultar ou destacar de uma vez." : "Catálogo da XBZ ligado ao site: estoque atualizado sozinho, preço calculado pela sua margem."}</p></div></div>
 <nav class="xsub" aria-label="Partes da integração">${subs.map(([h, t]) => `<a href="#${h}" data-ir="${h}"${sub === h ? ' aria-current="page"' : ""}>${t}</a>`).join("")}</nav>
-<div class="blocos" id="xcorpo">${html}</div>`, "xbz");
+<div class="blocos" id="xcorpo">${html}</div>`, ehProd ? "xbz/produtos" : "xbz");
     k.ligaCasca();
   }
   function carregando(sub) { pagina(sub, '<div class="carregando-tela" role="status" aria-label="Carregando"></div>'); }
 
   async function tela(h) {
-    const sub = h.startsWith("xbz/produtos") ? "xbz/produtos" : h.startsWith("xbz/pedidos") ? "xbz/pedidos" : "xbz";
+    const sub = ["xbz/produtos", "xbz/repetidos", "xbz/pedidos"].find(x => h.startsWith(x)) || "xbz";
     document.title = "XBZ e preços · Painel Khaus";
     if (ehDemo()) return pagina(sub, `<section class="bloco"><h2>Indisponível no modo demonstração</h2><p class="sub">A integração com a XBZ usa o banco de verdade. Entre no painel sem o <b>?demo</b> no endereço.</p></section>`);
     carregando(sub);
@@ -51,13 +52,15 @@
         X.regras = Object.assign({}, C.REGRAS_PADRAO, (r && r[0] && r[0].regras) || {});
         X.opcoes = (r && r[0] && r[0].opcoes) || {};
       }
-      if (sub === "xbz") return visao();
       if (!X.en) {
         const [en, aj] = await Promise.all([privado("enxuto.json"), K().rest("khaus_xbz_ajustes?select=*")]);
         X.en = en || [];
         X.aj = {}; (aj || []).forEach(a => { X.aj[a.cod] = a; });
       }
+      X.nRep = sugestoes().filter(s => !s.decidido).length;
+      if (sub === "xbz") return visao();
       if (sub === "xbz/produtos") return produtos();
+      if (sub === "xbz/repetidos") return repetidos();
       return pedidos();
     } catch (er) { K().trataErro(er); }
   }
@@ -71,7 +74,18 @@
     const ult = (st.log || []).find(l => /^sync:/.test(l.acao));
     const cats = C.CATEGORIAS.map(c => c[0]).concat("outros");
     const linhaLog = l => `<tr><td>${hora(l.quando)}</td><td>${esc(rotuloAcao(l.acao))}</td><td>${l.ok ? '<span class="xok">ok</span>' : '<span class="xerro">falhou</span>'}</td><td>${esc(resumoLog(l))}</td></tr>`;
+    const E0 = k.E, cfg = E0.cfg || {};
+    const semPreco = (E0.lista || []).filter(p => p.ativo && !(p.faixas || []).length).length;
+    const pend = [
+      [R.demo || cfg.precosDemo !== false, "Os preços ainda aparecem como <b>valores de demonstração</b>.", "Defina a margem e desligue o aviso", "#x-regra"],
+      [!X.regras._salva, "A margem da XBZ ainda é a de exemplo (custo × 1,8 + R$ 3).", "Ajustar a regra de preço", "#x-regra"],
+      [cfg.prazosDemo !== false, "Os prazos de produção ainda são de demonstração.", "Confirmar em Prazos e ajustes", "#ajustes"],
+      [X.nRep > 0, `${X.nRep} produto(s) da Khaus podem estar repetidos com a XBZ.`, "Conferir os repetidos", "#xbz/repetidos"],
+      [semPreco > 0, `${semPreco} produto(s) próprios estão sem preço (aparecem “sob consulta”).`, "Abrir os produtos", "#"]
+    ].filter(x => x[0]);
     pagina("xbz", `
+<section class="bloco"><h2>${k.I.alerta}Antes de vender</h2>
+  <div class="conteudo">${pend.length ? `<ul class="xpend">${pend.map(x => `<li><span>${x[1]}</span>${x[3].startsWith("#x-") ? `<button type="button" class="link" data-rolar="${x[3].slice(1)}">${esc(x[2])}</button>` : `<a href="${x[3]}" data-ir="${x[3].slice(1)}">${esc(x[2])}</a>`}</li>`).join("")}</ul>` : '<p class="xok">Tudo pronto: preços e prazos oficiais, sem repetidos pendentes.</p>'}</div></section>
 <section class="bloco"><h2>${k.I.relogio}Atualização automática</h2>
   <div class="conteudo">
     ${!st.ok ? `<div class="msg msg-erro">${esc(st.erro || "Não foi possível ler a situação da integração.")}</div>` : ""}
@@ -100,7 +114,7 @@
       <div class="xcat-tab"><div class="xcat-cab"><span>Categoria</span><span>Multiplicar por</span><span>Somar R$</span><span>Mínimo</span></div>
       ${cats.map(id => { const c = (R.categorias || {})[id] || {}; return `<div class="xcat-l" data-cat="${id}"><span>${esc(C.CAT_NOME[id])}</span><input class="ent num" data-k="multiplicador" type="number" step="0.05" value="${c.multiplicador ?? ""}" placeholder="${R.multiplicador}" aria-label="Multiplicador de ${esc(C.CAT_NOME[id])}"><input class="ent num" data-k="acrescimo" type="number" step="0.10" value="${c.acrescimo ?? ""}" placeholder="${R.acrescimo}" aria-label="Acréscimo de ${esc(C.CAT_NOME[id])}"><input class="ent num" data-k="minimo" type="number" step="1" value="${c.minimo ?? ""}" placeholder="${R.minimo}" aria-label="Mínimo de ${esc(C.CAT_NOME[id])}"></div>`; }).join("")}</div></details>
     <label class="interruptor"><input type="checkbox" name="esconderSemEstoque"${R.esconderSemEstoque ? " checked" : ""}><span>Esconder do site os produtos sem estoque e sem data de reposição</span></label>
-    <label class="interruptor"><input type="checkbox" name="demo"${R.demo ? " checked" : ""}><span>Mostrar no site que os preços são <b>valores de demonstração</b></span></label>
+    <label class="interruptor"><input type="checkbox" name="demo"${R.demo ? " checked" : ""}><span>Mostrar no site que os preços são <b>valores de demonstração</b> (vale para todos os produtos)</span></label>
   </div>
   <div class="rodape-ed"><div class="estado" id="estado">Tudo salvo.</div><button type="submit" class="btn btn-azul" id="x-salvar">Salvar e publicar no site</button></div>
 </form>
@@ -117,6 +131,7 @@
     });
     f.addEventListener("submit", async e => { e.preventDefault(); await salvaRegra(); });
     $("#x-sync").addEventListener("click", sincroniza);
+    $$("[data-rolar]").forEach(x => x.addEventListener("click", () => document.getElementById(x.dataset.rolar).scrollIntoView({ behavior: "smooth", block: "start" })));
     exemplo();
   }
   function faixaHtml(f, i) { return `<div class="xfaixa"><span>A partir de</span><input class="ent num" data-fq type="number" min="1" value="${f[0] || ""}" aria-label="Quantidade da faixa ${i + 1}"><span>un.</span><input class="ent num" data-fp type="number" min="0" max="80" step="0.5" value="${f[1] ?? ""}" aria-label="Desconto da faixa ${i + 1}"><span>% de desconto</span><button type="button" class="ico-btn" data-tira-faixa aria-label="Tirar a faixa">${K().I.x}</button></div>`; }
@@ -142,8 +157,11 @@
     if (!r.faixas.length) return K().aviso("Inclua pelo menos uma faixa de quantidade.", { erro: true });
     const b = $("#x-salvar"); b.classList.add("carregando"); b.disabled = true;
     try {
+      r._salva = true;
       await K().rest("khaus_xbz_regras?id=eq.1", { metodo: "PATCH", corpo: { regras: r, atualizado: new Date().toISOString() }, prefer: "return=minimal" });
       X.regras = r;
+      // o aviso de demonstração vale para o site todo (produtos da XBZ e próprios)
+      if (K().E.cfg.precosDemo !== r.demo) { await K().api.gravaConfig("precosDemo", r.demo); K().E.cfg.precosDemo = r.demo; }
       const p = await fn("publicar");
       if (!p.ok) throw new Error(p.erro || "Não consegui publicar.");
       K().aviso(`Regra salva. O site já mostra os preços novos em ${K().num(p.produtos)} produtos.`, { link: ["Ver no site", K().SITE_PUB + "/catalogo"] });
@@ -186,45 +204,98 @@
   function produtos() {
     const k = K();
     const cats = C.CATEGORIAS.map(c => c[0]).concat("outros");
+    X.sel = X.sel || new Set();
     pagina("xbz/produtos", `
 <section class="bloco"><div class="conteudo">
   ${!X.en.length ? `<div class="msg msg-erro">Ainda não há dados da XBZ. Rode “Atualizar agora” em Visão geral.</div>` : ""}
   <div class="barra"><div class="busca">${k.I.busca}<input class="ent" id="xp-q" type="search" placeholder="Buscar por nome ou código" value="${esc(X.f.q)}" aria-label="Buscar"></div>
     <select class="ent" id="xp-cat" aria-label="Categoria"><option value="">Todas as categorias</option>${cats.map(id => `<option value="${id}"${X.f.cat === id ? " selected" : ""}>${esc(C.CAT_NOME[id])}</option>`).join("")}</select>
-    <select class="ent" id="xp-vis" aria-label="Situação"><option value="">Todos</option><option value="oculto"${X.f.vis === "oculto" ? " selected" : ""}>Ocultos no site</option><option value="destaque"${X.f.vis === "destaque" ? " selected" : ""}>Em destaque</option><option value="ajustado"${X.f.vis === "ajustado" ? " selected" : ""}>Com margem própria</option><option value="sem"${X.f.vis === "sem" ? " selected" : ""}>Sem estoque</option></select></div>
+    <select class="ent" id="xp-vis" aria-label="Situação"><option value="">Todos</option><option value="visivel"${X.f.vis === "visivel" ? " selected" : ""}>Aparecem no site</option><option value="oculto"${X.f.vis === "oculto" ? " selected" : ""}>Ocultos no site</option><option value="destaque"${X.f.vis === "destaque" ? " selected" : ""}>Em destaque</option><option value="ajustado"${X.f.vis === "ajustado" ? " selected" : ""}>Com margem própria</option><option value="sem"${X.f.vis === "sem" ? " selected" : ""}>Sem estoque</option></select></div>
+  <div class="xsel" id="xp-sel" hidden></div>
   <p class="dica" id="xp-conta"></p>
-  <div class="xtab-wrap"><table class="xtab xprod"><thead><tr><th></th><th>Produto</th><th class="n">Custo</th><th class="n">No site</th><th class="n">Estoque</th><th>No site</th><th></th></tr></thead><tbody id="xp-l"></tbody></table></div>
+  <div class="xtab-wrap"><table class="xtab xprod"><thead><tr><th><input type="checkbox" id="xp-todos" aria-label="Selecionar os produtos desta página"></th><th></th><th>Produto</th><th class="n">Custo</th><th class="n">No site</th><th class="n">Estoque</th><th>No site</th><th></th></tr></thead><tbody id="xp-l"></tbody></table></div>
   <div class="xpag" id="xp-pag"></div>
 </div></section>`);
+    let filtrados = [], pagAtual = [];
     const pinta = () => {
       const q = k.sem(X.f.q).trim();
-      const todos = X.en.map(linhaProd).filter(r =>
+      filtrados = X.en.map(linhaProd).filter(r =>
         (!X.f.cat || r.cat === X.f.cat) &&
-        (!X.f.vis || (X.f.vis === "oculto" ? r.a.oculto : X.f.vis === "destaque" ? r.a.destaque : X.f.vis === "ajustado" ? (r.a.multiplicador != null || r.a.acrescimo != null || r.a.minimo) : !r.est)) &&
+        (!X.f.vis || (X.f.vis === "visivel" ? !r.a.oculto : X.f.vis === "oculto" ? r.a.oculto : X.f.vis === "destaque" ? r.a.destaque : X.f.vis === "ajustado" ? (r.a.multiplicador != null || r.a.acrescimo != null || r.a.minimo) : !r.est)) &&
         (!q || k.sem(r.nome + " " + r.it.nome + " " + r.it.cod + " " + r.it.v.map(v => v.comp).join(" ")).includes(q)));
-      const POR = 50, tot = Math.max(1, Math.ceil(todos.length / POR)); X.pag = Math.min(X.pag, tot);
-      $("#xp-conta").textContent = `${k.num(todos.length)} ${todos.length === 1 ? "produto" : "produtos"}`;
-      $("#xp-l").innerHTML = todos.slice((X.pag - 1) * POR, X.pag * POR).map(r => `<tr data-cod="${esc(r.it.cod)}"${r.a.oculto ? ' class="xoculto"' : ""}>
+      const POR = 50, tot = Math.max(1, Math.ceil(filtrados.length / POR)); X.pag = Math.min(X.pag, tot);
+      pagAtual = filtrados.slice((X.pag - 1) * POR, X.pag * POR);
+      $("#xp-conta").textContent = `${k.num(filtrados.length)} ${filtrados.length === 1 ? "produto" : "produtos"}`;
+      $("#xp-l").innerHTML = pagAtual.map(r => `<tr data-cod="${esc(r.it.cod)}" class="${r.a.oculto ? "xoculto" : ""}${X.sel.has(r.it.cod) ? " xmarcado" : ""}">
+        <td><input type="checkbox" data-sel${X.sel.has(r.it.cod) ? " checked" : ""} aria-label="Selecionar ${esc(r.nome)}"></td>
         <td><img src="${foto(r.img)}" alt="" width="48" height="48" loading="lazy"></td>
-        <td><b>${esc(r.nome)}</b><small>${esc(r.it.cod)} · ${esc(C.CAT_NOME[r.cat])}${r.a.multiplicador != null || r.a.acrescimo != null ? " · margem própria" : ""}</small></td>
+        <td><b>${esc(r.nome)}</b><small>${esc(r.it.cod)} · ${esc(C.CAT_NOME[r.cat])}${r.a.multiplicador != null || r.a.acrescimo != null ? " · margem própria" : ""}${r.a.oculto ? " · <b>oculto</b>" : ""}</small></td>
         <td class="n">${k.BRL(r.custo)}</td><td class="n"><b>${k.BRL(r.preco)}</b><small>mín. ${r.min}</small></td>
         <td class="n">${r.est ? k.num(r.est) : '<span class="xerro">0</span>'}</td>
         <td><label class="mini-check"><input type="checkbox" data-vis${r.a.oculto ? "" : " checked"}> Aparece</label><label class="mini-check"><input type="checkbox" data-dest${r.a.destaque ? " checked" : ""}> Destaque</label></td>
-        <td><button type="button" class="ico-btn" data-ed aria-label="Ajustar ${esc(r.nome)}">${k.I.editar}</button></td></tr>`).join("") || '<tr><td colspan="7">Nenhum produto.</td></tr>';
+        <td><button type="button" class="ico-btn" data-ed aria-label="Ajustar ${esc(r.nome)}">${k.I.editar}</button></td></tr>`).join("") || '<tr><td colspan="8">Nenhum produto.</td></tr>';
       $("#xp-pag").innerHTML = tot > 1 ? `<button type="button" class="btn btn-linha" data-p="-1"${X.pag <= 1 ? " disabled" : ""}>Anterior</button><span>Página ${X.pag} de ${tot}</span><button type="button" class="btn btn-linha" data-p="1"${X.pag >= tot ? " disabled" : ""}>Próxima</button>` : "";
+      const todosPag = pagAtual.length && pagAtual.every(r => X.sel.has(r.it.cod));
+      $("#xp-todos").checked = !!todosPag; $("#xp-todos").indeterminate = !todosPag && pagAtual.some(r => X.sel.has(r.it.cod));
+      pintaSel();
+    };
+    const pintaSel = () => {
+      const n = X.sel.size, box = $("#xp-sel");
+      box.hidden = !n && filtrados.length === X.en.length;
+      box.innerHTML = (n ? `<b>${k.num(n)} selecionado${n === 1 ? "" : "s"}</b>` : `<span>Nenhum selecionado</span>`) +
+        (filtrados.length && filtrados.length !== n ? `<button type="button" class="link" data-acao="filtrados">Selecionar os ${k.num(filtrados.length)} desta busca</button>` : "") +
+        (n ? `<span class="xsel-acoes"><button type="button" class="btn btn-linha" data-acao="ocultar">${k.I.olhoNao}Ocultar do site</button><button type="button" class="btn btn-linha" data-acao="mostrar">${k.I.olho}Mostrar no site</button><button type="button" class="btn btn-linha" data-acao="destacar">Destacar</button><button type="button" class="btn btn-linha" data-acao="tirar">Tirar destaque</button>
+          <select class="ent" data-acao="categoria" aria-label="Mudar a categoria dos selecionados"><option value="">Mudar categoria…</option>${cats.map(id => `<option value="${id}">${esc(C.CAT_NOME[id])}</option>`).join("")}</select>
+          <button type="button" class="link" data-acao="limpar">Limpar seleção</button></span>` : "");
     };
     let t; $("#xp-q").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => { X.f.q = e.target.value; X.pag = 1; pinta(); }, 200); });
     $("#xp-cat").addEventListener("change", e => { X.f.cat = e.target.value; X.pag = 1; pinta(); });
     $("#xp-vis").addEventListener("change", e => { X.f.vis = e.target.value; X.pag = 1; pinta(); });
     $("#xp-pag").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (b) { X.pag += +b.dataset.p; pinta(); scrollTo(0, 0); } });
+    $("#xp-todos").addEventListener("change", e => { pagAtual.forEach(r => e.target.checked ? X.sel.add(r.it.cod) : X.sel.delete(r.it.cod)); pinta(); });
     $("#xp-l").addEventListener("change", async e => {
       const tr = e.target.closest("tr"), cod = tr.dataset.cod;
+      if (e.target.matches("[data-sel]")) { e.target.checked ? X.sel.add(cod) : X.sel.delete(cod); tr.classList.toggle("xmarcado", e.target.checked); const tp = pagAtual.every(r => X.sel.has(r.it.cod)); $("#xp-todos").checked = tp; $("#xp-todos").indeterminate = !tp && pagAtual.some(r => X.sel.has(r.it.cod)); pintaSel(); return; }
       if (e.target.matches("[data-vis]")) await gravaAjuste(cod, { oculto: !e.target.checked });
       if (e.target.matches("[data-dest]")) await gravaAjuste(cod, { destaque: e.target.checked });
       pinta();
     });
     $("#xp-l").addEventListener("click", async e => { if (e.target.closest("[data-ed]")) { await editaProduto(e.target.closest("tr").dataset.cod); pinta(); } });
+    const emLote = async (mud, rotulo, b) => {
+      const cods = [...X.sel]; if (!cods.length) return;
+      if (cods.length > 20) { const ok = await k.dialogo({ titulo: `${rotulo} ${k.num(cods.length)} produtos?`, texto: "A mudança vale para o site em alguns segundos. Dá para desfazer depois.", botoes: [{ texto: "Voltar", valor: null }, { texto: rotulo, classe: "btn-azul", valor: "s" }] }); if (!ok) return; }
+      if (b) { b.classList.add("carregando"); b.disabled = true; }
+      await gravaVarios(cods, mud);
+      X.sel.clear(); pinta();
+    };
+    $("#xp-sel").addEventListener("click", async e => {
+      const b = e.target.closest("button[data-acao]"); if (!b) return;
+      const a = b.dataset.acao;
+      if (a === "filtrados") { filtrados.forEach(r => X.sel.add(r.it.cod)); return pinta(); }
+      if (a === "limpar") { X.sel.clear(); return pinta(); }
+      if (a === "ocultar") return emLote({ oculto: true }, "Ocultar", b);
+      if (a === "mostrar") return emLote({ oculto: false }, "Mostrar", b);
+      if (a === "destacar") return emLote({ destaque: true }, "Destacar", b);
+      if (a === "tirar") return emLote({ destaque: false }, "Tirar o destaque de", b);
+    });
+    $("#xp-sel").addEventListener("change", async e => {
+      const s = e.target.closest("select[data-acao='categoria']"); if (!s || !s.value) return;
+      await emLote({ categoria: s.value }, "Mudar a categoria de", null);
+    });
     pinta();
+  }
+  // grava o mesmo ajuste em vários produtos de uma vez e publica o site uma vez só
+  async function gravaVarios(cods, mud) {
+    const agora = new Date().toISOString();
+    const linhas = cods.map(cod => { const n = Object.assign({ cod, oculto: false, destaque: false }, X.aj[cod] || {}, mud, { atualizado: agora }); delete n.created_at; return n; });
+    try {
+      for (let i = 0; i < linhas.length; i += 500) {
+        const r = await K().rest("khaus_xbz_ajustes?on_conflict=cod", { metodo: "POST", corpo: linhas.slice(i, i + 500), prefer: "resolution=merge-duplicates,return=representation" });
+        (r || linhas.slice(i, i + 500)).forEach(x => { X.aj[x.cod] = x; });
+      }
+      const p = await fn("publicar");
+      K().aviso(p.ok ? `${K().num(cods.length)} produtos alterados. O site já foi atualizado.` : (p.erro || "Alterado, mas não consegui publicar."), { erro: !p.ok });
+    } catch (er) { K().trataErro(er); }
   }
   let tPub;
   async function gravaAjuste(cod, mud) {
@@ -257,6 +328,58 @@
       } }]
     });
     if (ok) K().aviso("Produto ajustado. O site atualiza em instantes.");
+  }
+
+  /* ---------- repetidos: produto próprio da Khaus que também existe na XBZ ---------- */
+  const PARADA = new Set(["de", "da", "do", "com", "em", "para", "e", "a", "o"]);
+  const toks = s => C.semAcento(s).replace(/(\d),(\d)/g, "$1.$2").replace(/[^a-z0-9. ]/g, " ").split(/\s+/).filter(w => w.length > 1 && !PARADA.has(w));
+  function sugestoes() {
+    if (!X.en || !C) return [];
+    const kh = (K().E.lista || []).filter(p => p.ativo);
+    const xb = X.en.map(x => ({ x, t: new Set(toks(x.nome)) }));
+    const out = [];
+    for (const p of kh) {
+      const kt = toks(p.nome), nums = kt.filter(w => /\d/.test(w));
+      const cand = [];
+      for (const { x, t } of xb) {
+        if (nums.some(n => !t.has(n))) continue;
+        const inter = kt.filter(w => t.has(w)).length;
+        const nota = inter / Math.max(kt.length, t.size);
+        if (nota >= 0.75) cand.push({ x, nota });
+      }
+      const est = x => x.v.reduce((s, v) => s + v.est, 0);
+      cand.sort((a, b) => b.nota - a.nota || est(b.x) - est(a.x));
+      for (const c of cand.slice(0, 2)) {
+        const a = X.aj[c.x.cod] || {};
+        out.push({ p, x: c.x, nota: c.nota, decidido: a.vinculo === p.id || a.vinculo === "!" + p.id, mesmo: a.vinculo === p.id });
+      }
+    }
+    return out;
+  }
+  function repetidos() {
+    const k = K(), sug = sugestoes();
+    const pend = sug.filter(s => !s.decidido), feitos = sug.filter(s => s.mesmo);
+    const linha = s => {
+      const v = s.x.v.find(v => v.img) || s.x.v[0];
+      const fk = s.p.foto ? s.p.foto : "/img/" + s.p.id + "-240.webp";
+      return `<tr data-cod="${esc(s.x.cod)}" data-kh="${esc(s.p.id)}"><td><img src="${esc(fk)}" alt="" width="48" height="48" loading="lazy"></td><td><b>${esc(s.p.nome)}</b><small>Produto da Khaus</small></td>
+        <td><img src="${foto(v.img)}" alt="" width="48" height="48" loading="lazy"></td><td><b>${esc(C.nomeBonito(s.x.nome))}</b><small>XBZ ${esc(s.x.cod)} · ${k.num(s.x.v.reduce((t, v) => t + v.est, 0))} em estoque</small></td>
+        <td>${s.mesmo ? `<button type="button" class="btn btn-linha" data-rep="desfaz">Desfazer</button>` : `<div class="xacoes"><button type="button" class="btn btn-azul" data-rep="mesmo">É o mesmo</button><button type="button" class="btn btn-linha" data-rep="dif">São diferentes</button></div>`}</td></tr>`;
+    };
+    pagina("xbz/repetidos", `
+<section class="bloco"><h2>${k.I.lista}Possíveis repetidos</h2><p class="sub">Produtos da Khaus com nome parecido com algum da XBZ. Se for o mesmo, o da XBZ sai do site e fica só o da Khaus, com as fotos e os preços dela.</p>
+  <div class="conteudo">${pend.length ? `<div class="xtab-wrap"><table class="xtab"><thead><tr><th></th><th>Khaus</th><th></th><th>XBZ</th><th></th></tr></thead><tbody>${pend.map(linha).join("")}</tbody></table></div>` : '<p class="xok">Nada para conferir.</p>'}</div></section>
+${feitos.length ? `<section class="bloco"><h2>Marcados como o mesmo produto</h2><div class="conteudo"><div class="xtab-wrap"><table class="xtab"><tbody>${feitos.map(linha).join("")}</tbody></table></div></div></section>` : ""}`);
+    $("#xcorpo").addEventListener("click", async e => {
+      const b = e.target.closest("[data-rep]"); if (!b) return;
+      const tr = b.closest("tr"), cod = tr.dataset.cod, kh = tr.dataset.kh, a = b.dataset.rep;
+      b.classList.add("carregando"); b.disabled = true;
+      if (a === "mesmo") await gravaAjuste(cod, { oculto: true, vinculo: kh });
+      if (a === "dif") await gravaAjuste(cod, { vinculo: "!" + kh });
+      if (a === "desfaz") await gravaAjuste(cod, { oculto: false, vinculo: null });
+      X.nRep = sugestoes().filter(s => !s.decidido).length;
+      repetidos();
+    });
   }
 
   /* ---------- pedidos ---------- */
@@ -375,5 +498,13 @@
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  window.KhausXbz = { tela, interpreta };
+  async function demoGeral(v) {
+    await core();
+    const r = await K().rest("khaus_xbz_regras?select=regras&id=eq.1");
+    const regras = Object.assign({}, (r && r[0] && r[0].regras) || {}, { demo: !!v });
+    await K().rest("khaus_xbz_regras?id=eq.1", { metodo: "PATCH", corpo: { regras, atualizado: new Date().toISOString() }, prefer: "return=minimal" });
+    if (X.regras) X.regras.demo = !!v;
+    await fn("publicar");
+  }
+  window.KhausXbz = { tela, interpreta, demoGeral };
 })();

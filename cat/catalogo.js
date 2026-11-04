@@ -31,6 +31,7 @@ const swatch = fam => FAMILIA[fam] || "#d5d8de";
 const FAIXAS_PRECO = [["ate5", "Até R$ 5", 0, 5], ["5a15", "R$ 5 a 15", 5, 15], ["15a40", "R$ 15 a 40", 15, 40], ["40a100", "R$ 40 a 100", 40, 100], ["100", "Acima de R$ 100", 100, 1e9]];
 
 const E = { q: "", cat: "", cores: new Set(), preco: "", qtd: 0, soEstoque: true, soPonta: false, ordem: "rel", pagina: 1 };
+let PRAZOS = [], PRAZOS_DEMO = true;
 let TODOS = [], POR_ID = new Map(), CATS = [], FAIXAS = [[1, 0]], DEMO = true, CDN = "https://cdn.xbzbrindes.com.br/img/produtos/", VERSAO = "", DESC = null, ATUAL = [];
 
 /* ---------- dados ---------- */
@@ -52,7 +53,10 @@ async function carregaKhaus() {
       pega(SUPA + "/rest/v1/khaus_config?select=chave,valor", op).catch(() => [])
     ]);
     return { prods, cfg: Object.fromEntries((cfg || []).map(c => [c.chave, c.valor])) };
-  } catch (e) { return { prods: [], cfg: {} }; }
+  } catch (e) {
+    try { const c = await pega("painel/catalogo.json", { cache: "no-cache" }); return { prods: (c.produtos || []).filter(p => p.ativo !== false), cfg: {} }; }
+    catch (e2) { return { prods: [], cfg: {} }; }
+  }
 }
 
 const foto = (img, tam) => !img ? "" : /^https?:|^img\//.test(img) ? img : CDN + tam + "/" + img;
@@ -101,6 +105,8 @@ async function inicia() {
   }
   for (const p of kh.prods || []) lista.push(deKhaus(p, kh.cfg.esgotado));
   if (kh.cfg.precosDemo === false && !xbz) DEMO = false;
+  PRAZOS = (Array.isArray(kh.cfg.prazos) ? kh.cfg.prazos : []).slice().sort((a, b) => (a.extra || 0) - (b.extra || 0));
+  PRAZOS_DEMO = kh.cfg.prazosDemo !== false;
   for (const p of lista) {
     p.busca = semAcento([p.nome, CAT_NOME[p.cat] || "", ...p.cores.map(c => c.nome), p.id.replace(/^k-/, "")].join(" "));
     p.fams = new Set(p.cores.map(c => c.fam));
@@ -112,6 +118,7 @@ async function inicia() {
   CATS = Object.keys(CAT_NOME).filter(id => cont[id]).map(id => ({ id, nome: CAT_NOME[id], n: cont[id], img: capa(id) }));
   montaTopo(); montaFiltros(); leUrl(); desenha(true); atualizaOrc();
   const id = URLP.get("produto"); if (id && POR_ID.has(id)) abreFicha(POR_ID.get(id));
+  else if (URLP.get("orcamento")) { abre("#orc"); const u = new URL(location.href); u.searchParams.delete("orcamento"); history.replaceState(null, "", u); }
 }
 
 let CRUS = [];
@@ -171,6 +178,8 @@ function tabela(p) {
   return [p.min, ...qs];
 }
 const precoRef = p => unitario(p, Math.max(p.min, E.qtd || 0));
+const comPrazo = (v, pz) => v == null ? null : Math.round(v * (1 + ((pz && pz.extra) || 0) / 100) * 100) / 100;
+const prazoTxt = z => { if (!z) return ""; const c = PRAZOS.find(x => x.id === z.id) || z; return `${z.nome}${c.de ? ` (${c.de} a ${c.ate} dias úteis)` : ""}`; };
 
 /* ---------- filtro e ordem ---------- */
 function bate(p, toks) {
@@ -282,7 +291,8 @@ async function descricao(p) {
 }
 function abreFicha(p, corIdx) {
   const ci = corIdx != null ? corIdx : Math.max(0, p.cores.findIndex(c => c.est !== 0));
-  F = { p, cor: ci, q: Math.max(p.min, E.qtd || p.min) };
+  F = { p, cor: ci, q: Math.max(p.min, E.qtd || p.min), pz: PRAZOS[0] || null };
+  pintaPrazos();
   const nomeCat = CAT_NOME[p.cat] || "";
   $("#fiCat").innerHTML = `<button type="button" data-ircat="${p.cat}">${esc(nomeCat)}</button>${p.tipo === "P" ? " · Ponta de estoque" : p.tipo === "E" ? " · Edição limitada" : ""}`;
   $("#fichaNome").textContent = p.nome;
@@ -316,13 +326,18 @@ function pintaFicha() {
   $("#fiMin").textContent = `mínimo ${int(p.min)} un.`;
   pintaPreco();
 }
+function pintaPrazos() {
+  const box = $("#fiPrazos"); if (!box) return;
+  box.hidden = !PRAZOS.length;
+  box.innerHTML = PRAZOS.length ? `<div class="fi-rot"><span>Prazo de produção</span><em>dias úteis após aprovar a arte</em></div><div class="pzs">` + PRAZOS.map((z, i) => `<button type="button" class="pzc" data-pzi="${i}" aria-pressed="${F && F.pz && F.pz.id === z.id}"><b>${esc(z.nome)}</b><span>${z.de} a ${z.ate} dias</span><em>${z.extra ? "+" + z.extra + "%" : "sem custo"}</em></button>`).join("") + `</div>${PRAZOS_DEMO ? `<p class="fi-nota">Prazos de demonstração, confirmados no orçamento.</p>` : ""}` : "";
+}
 function pintaPreco() {
-  const { p } = F, q = F.q, c = p.cores[F.cor], un = unitario(p, q);
+  const { p } = F, q = F.q, c = p.cores[F.cor], un = comPrazo(unitario(p, q), F.pz);
   $("#fiPreco").innerHTML = un == null ? `<b>Sob consulta</b>` : `<b>${brl(un)}</b><span>por unidade, com ${int(q)} un.</span>`;
   const qs = tabela(p);
   $("#fiFaixas").innerHTML = un == null ? "" : `<p class="fx-tit">Quanto mais unidades, menor o preço</p>` + qs.map((a, i) => {
     const b = qs[i + 1], ativa = q >= a && (!b || q < b);
-    return `<button type="button" class="fx${ativa ? " on" : ""}" data-fx="${a}"><span>${int(a)}${b ? "–" + int(b - 1) : "+"} un.</span><b>${brl(unitario(p, a))}</b></button>`;
+    return `<button type="button" class="fx${ativa ? " on" : ""}" data-fx="${a}"><span>${int(a)}${b ? "–" + int(b - 1) : "+"} un.</span><b>${brl(comPrazo(unitario(p, a), F.pz))}</b></button>`;
   }).join("");
   $("#fiTotal").textContent = un == null ? "A combinar" : brl(un * q);
   const av = [];
@@ -347,10 +362,10 @@ function atualizaOrc() {
   let total = 0, temConsulta = false;
   $("#orcItens").innerHTML = n ? ORC.map((it, i) => {
     const p = POR_ID.get(it.id); if (!p) return "";
-    const c = p.cores[it.cor] || p.cores[0], un = unitario(p, it.q);
+    const c = p.cores[it.cor] || p.cores[0], un = comPrazo(unitario(p, it.q), it.pz);
     if (un == null) temConsulta = true; else total += un * it.q;
     const mini = p.fonte === "k" && p.fotoK ? `img/${p.fotoK}-240.webp` : foto(c.img, 1);
-    return `<div class="it"><img src="${mini}" alt="" width="64" height="64" loading="lazy"><div class="it-info"><b>${esc(p.nome)}</b><span>${esc(c.nome)}${un != null ? " · " + brl(un) + "/un." : ""}</span>
+    return `<div class="it"><img src="${mini}" alt="" width="64" height="64" loading="lazy"><div class="it-info"><b>${esc(p.nome)}</b><span>${esc(c.nome)}${un != null ? " · " + brl(un) + "/un." : ""}${it.pz ? " · " + esc(it.pz.nome) : ""}</span>
       <div class="it-q"><button type="button" data-iq="${i}" data-d="-1" aria-label="Menos">−</button><input type="number" inputmode="numeric" value="${it.q}" min="${p.min}" data-iqv="${i}" aria-label="Quantidade de ${esc(p.nome)}"><button type="button" data-iq="${i}" data-d="1" aria-label="Mais">+</button><em>${un != null ? brl(un * it.q) : "Sob consulta"}</em></div>
       ${it.q < p.min ? `<small class="it-av">Mínimo ${int(p.min)} un.</small>` : ""}</div><button type="button" class="it-x" data-tirai="${i}" aria-label="Remover ${esc(p.nome)}">×</button></div>`;
   }).join("") : `<div class="gav-vazio"><b>Seu orçamento está vazio.</b><p>Escolha um produto, a cor e a quantidade e toque em “Adicionar ao orçamento”.</p></div>`;
@@ -360,8 +375,10 @@ function atualizaOrc() {
 }
 function adiciona() {
   const { p, cor, q } = F;
+  const pz = F.pz ? { id: F.pz.id, nome: F.pz.nome, extra: F.pz.extra || 0, de: F.pz.de, ate: F.pz.ate } : undefined;
   const i = ORC.findIndex(it => it.id === p.id && it.cor === cor);
-  if (i >= 0) ORC[i].q = q; else ORC.push({ id: p.id, cor, q });
+  const novo = { id: p.id, cor, q }; if (pz) novo.pz = pz;
+  if (i >= 0) ORC[i] = novo; else ORC.push(novo);
   salvaOrc(); fecha("#ficha");
   aviso(`${p.nome} (${p.cores[cor].nome}) no orçamento`, "Ver orçamento", () => abre("#orc"));
 }
@@ -370,9 +387,10 @@ function mensagem() {
   let total = 0, n = 0;
   for (const it of ORC) {
     const p = POR_ID.get(it.id); if (!p) continue;
-    const c = p.cores[it.cor] || p.cores[0], un = unitario(p, it.q); n++;
+    const c = p.cores[it.cor] || p.cores[0], un = comPrazo(unitario(p, it.q), it.pz); n++;
     linhas.push(`${n}. ${p.nome}${c.nome !== "Única" ? " — " + c.nome : ""}`);
     linhas.push(`   Ref. ${c.cod} · ${int(it.q)} un.${un != null ? ` × ${brl(un)} = ${brl(un * it.q)}` : " · preço sob consulta"}`);
+    if (it.pz) linhas.push(`   Prazo: ${prazoTxt(it.pz)}${it.pz.extra ? ` (+${it.pz.extra}%)` : ""}`);
     linhas.push("");
     if (un != null) total += un * it.q;
   }
@@ -451,6 +469,7 @@ document.addEventListener("click", e => {
   if (card) { const p = POR_ID.get(card.dataset.id); const b = t.closest(".bol"); abreFicha(p, b ? +b.dataset.cor : undefined); return; }
   const mini = t.closest("[data-mini]"); if (mini && F) { F.cor = +mini.dataset.mini; pintaFicha(); return; }
   const fc = t.closest("[data-fcor]"); if (fc && F) { F.cor = +fc.dataset.fcor; pintaFicha(); return; }
+  const pzb = t.closest("[data-pzi]"); if (pzb && F) { F.pz = PRAZOS[+pzb.dataset.pzi]; pintaPrazos(); pintaPreco(); return; }
   const fx = t.closest("[data-fx]"); if (fx && F) { F.q = +fx.dataset.fx; $("#fiQ").value = F.q; pintaPreco(); return; }
   const iq = t.closest("[data-iq]"); if (iq) { const it = ORC[+iq.dataset.iq], p = POR_ID.get(it.id); it.q = Math.max(p ? p.min : 1, it.q + (+iq.dataset.d) * passo(it.q)); salvaOrc(); return; }
   const tira = t.closest("[data-tirai]"); if (tira) { ORC.splice(+tira.dataset.tirai, 1); salvaOrc(); return; }
@@ -472,6 +491,7 @@ document.addEventListener("keydown", e => {
 });
 observador = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) maisPagina(); }, { rootMargin: "900px 0px" });
 observador.observe($("#mais"));
+try { const ev = localStorage.getItem("khaus-evento"); if (ev && !$("#oData").value) $("#oData").value = ev; } catch (e) { }
 const cli = ls("khaus-cliente"); if (cli) { $("#oNome").value = cli.nome || ""; $("#oEmpresa").value = cli.empresa || ""; $("#oCidade").value = cli.cidade || ""; }
 const topo = $("#topo"); addEventListener("scroll", () => topo.classList.toggle("rolou", scrollY > 8), { passive: true });
 

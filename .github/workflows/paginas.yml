@@ -1,0 +1,26 @@
+# Uma vez por dia: refaz as páginas dos produtos da XBZ (/c) e o sitemap a partir do catálogo publicado,
+# e envia para o GitHub só se algo mudou (produto novo, produto que saiu, preço ou descrição).
+name: Páginas dos produtos
+on:
+  schedule:
+    - cron: "30 9 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  paginas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Gerar páginas e sitemap
+        run: node ferramentas/gera-paginas-xbz.js
+      - name: Enviar se mudou
+        run: |
+          git config user.name "Atualização automática"
+          git config user.email "actions@users.noreply.github.com"
+          git add c sitemap.xml
+          if git diff --cached --quiet; then echo "Nada mudou."; else git commit -m "Páginas dos produtos atualizadas" && git push; fi

@@ -97,6 +97,17 @@ const INSPECAO = () => {
     if (!r || r.status() >= 400) { anota("/p/" + f, "HTTP " + (r && r.status())); continue; }
     (await p.$$eval("a[href]", as => as.map(a => a.href))).forEach(h => links.add(h));
   }
+  // amostra das páginas dos produtos da XBZ (/c)
+  const cs = fs.existsSync(path.join(__dirname, "..", "c")) ? fs.readdirSync(path.join(__dirname, "..", "c")).filter(f => f.endsWith(".html")) : [];
+  const amostra = cs.filter((_, i) => i % Math.max(1, Math.floor(cs.length / 40)) === 0);
+  for (const f of amostra) {
+    const r = await p.goto(B + "/c/" + f.replace(/.html$/, ""), { waitUntil: "load" });
+    if (!r || r.status() >= 400) { anota("/c/" + f, "HTTP " + (r && r.status())); continue; }
+    const ok = await p.evaluate(() => { const i = document.querySelector(".f img"); return !!document.querySelector("h1") && !!i && i.naturalWidth > 0 && !!document.querySelector('script[type="application/ld+json"]'); });
+    if (!ok) anota("/c/" + f, "página sem título, foto ou dados para o Google");
+    (await p.$$eval("a[href]", as => as.map(a => a.href))).forEach(h => links.add(h));
+  }
+  console.log(`  ${amostra.length} páginas de produtos da XBZ conferidas (de ${cs.length}).`);
   for (const u of [B + "/", CAT]) { await p.goto(u, { waitUntil: "domcontentloaded" }); (await p.$$eval("a[href]", as => as.map(a => a.href))).forEach(h => links.add(h)); }
   let nLinks = 0;
   for (const h of links) {

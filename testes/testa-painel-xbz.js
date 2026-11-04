@@ -24,7 +24,7 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
     if (m === "OPTIONS") { await req.respond({ status: 204, headers: CORS, body: "" }); return true; }
     let c = null; try { c = req.postData() ? JSON.parse(req.postData()) : null; } catch (e) { }
     if (p === "/rest/v1/khaus_xbz_regras") { if (m === "GET") return json(req, 200, [{ regras: X.regras, opcoes: X.opcoes }]), true; X.regras = c.regras; return req.respond({ status: 204, headers: CORS, body: "" }), true; }
-    if (p === "/rest/v1/khaus_xbz_ajustes") { if (m === "GET") return json(req, 200, X.ajustes), true; X.ajustes = X.ajustes.filter(a => a.cod !== c.cod).concat(c); return json(req, 201, [c]), true; }
+    if (p === "/rest/v1/khaus_xbz_ajustes") { if (m === "GET") return json(req, 200, X.ajustes), true; const ls = Array.isArray(c) ? c : [c]; X.ajustes = X.ajustes.filter(a => !ls.some(l => l.cod === a.cod)).concat(ls); return json(req, 201, ls), true; }
     if (p === "/rest/v1/khaus_xbz_pedidos") return json(req, 200, X.pedidosTab), true;
     if (p === "/storage/v1/object/authenticated/khaus-xbz/enxuto.json") return req.respond({ status: 200, headers: CORS, contentType: "application/json", body: ENX }), true;
     if (p.startsWith("/storage/v1/object/authenticated/khaus-xbz/")) return json(req, 404, { message: "not found" }), true;
@@ -54,6 +54,8 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
   await pg.goto(B + "/painel#xbz", { waitUntil: "networkidle2" }); await pg.waitForSelector("#x-regra", { timeout: 10000 });
   ok(/2 de 12/.test(await pg.$eval(".xcards", e => e.textContent)), "mostra as consultas usadas no dia");
   ok(/custo/.test(await pg.$eval("#x-exemplo", e => e.textContent)), "exemplo de preço calculado");
+  const pend = await pg.$$eval(".xpend li", l => l.map(x => x.textContent));
+  ok(pend.some(t => /demonstração/.test(t)) && pend.some(t => /repetidos/.test(t)), "lista as pendências antes de vender (" + pend.length + ")");
   await pg.screenshot({ path: path.join(SH, "painel-xbz-1.png"), fullPage: true });
 
   console.log("== regra de preço");
@@ -63,6 +65,22 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
   await clica("#x-salvar"); await espera(800);
   ok(X.regras.multiplicador === 2 && X.regras.categorias.copos.multiplicador === 2.2, "grava a regra geral e a da categoria");
   ok(X.chamadas.some(c => c.acao === "publicar"), "publica o catálogo depois de salvar");
+  await pg.waitForSelector("#x-regra", { timeout: 8000 });
+  await pg.$eval('[name="demo"]', e => e.click()); await pg.evaluate(() => document.querySelector("#x-salvar").click()); await espera(900);
+  ok(X.regras.demo === false && F.db.config.some(c => c.chave === "precosDemo" && c.valor === false), "desligar a demonstração vale para o site todo");
+
+  console.log("== repetidos");
+  await pg.goto(B + "/painel#xbz/repetidos", { waitUntil: "networkidle2" }); await pg.waitForSelector("[data-rep]", { timeout: 15000 });
+  const nRep = await pg.$$eval("[data-rep='mesmo']", l => l.length);
+  ok(nRep >= 5 && nRep <= 70, "sugere repetidos para conferir (" + nRep + ")");
+  const par = await pg.$eval("[data-rep='mesmo']", b => { const tr = b.closest("tr"); return [tr.dataset.cod, tr.dataset.kh]; });
+  await pg.$eval("[data-rep='mesmo']", b => b.click()); await espera(1500);
+  ok(X.ajustes.some(a => a.cod === par[0] && a.oculto === true && a.vinculo === par[1]), "“É o mesmo” esconde o da XBZ e liga ao produto da Khaus");
+  const par2 = await pg.$eval("[data-rep='dif']", b => { const tr = b.closest("tr"); return [tr.dataset.cod, tr.dataset.kh]; });
+  await pg.$eval("[data-rep='dif']", b => b.click()); await espera(1200);
+  ok(X.ajustes.some(a => a.cod === par2[0] && a.vinculo === "!" + par2[1] && !a.oculto), "“São diferentes” some da lista sem esconder nada");
+  ok((await pg.$$eval("[data-rep='mesmo']", l => l.length)) === nRep - 2, "lista diminui depois de decidir");
+  await pg.screenshot({ path: path.join(SH, "painel-xbz-repetidos.png") });
 
   console.log("== produtos");
   await pg.goto(B + "/painel#xbz/produtos", { waitUntil: "networkidle2" }); await pg.waitForSelector("#xp-l tr[data-cod]", { timeout: 15000 });
@@ -75,6 +93,23 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
   ok(X.ajustes.some(a => a.cod === "19114" && a.oculto === true), "ocultar grava o ajuste");
   ok(X.chamadas.filter(c => c.acao === "publicar").length >= 2, "ocultar republica o site");
   await pg.screenshot({ path: path.join(SH, "painel-xbz-2.png") });
+  console.log("== vários de uma vez");
+  await pg.goto(B + "/painel#xbz/produtos", { waitUntil: "networkidle2" }); await pg.waitForSelector("#xp-l tr[data-cod]", { timeout: 15000 });
+  ok(await pg.$eval('.abas [data-ir="xbz/produtos"]', e => e.getAttribute("aria-current") === "page"), "“Produtos da XBZ” direto no menu do painel");
+  await pg.$eval("#xp-q", e => { e.value = ""; e.dispatchEvent(new Event("input", { bubbles: true })); });
+  await pg.select("#xp-cat", "brinquedos"); await espera(400);
+  const nBrinq = +(await pg.$eval("#xp-conta", e => e.textContent)).replace(/[^0-9]/g, "");
+  await pg.$eval("#xp-todos", e => e.click()); await espera(200);
+  ok(/50 selecionados/.test(await pg.$eval("#xp-sel", e => e.textContent)), "marca os 50 da página");
+  await pg.$eval('#xp-sel [data-acao="filtrados"]', e => e.click()); await espera(200);
+  ok(new RegExp(nBrinq + " selecionados").test(await pg.$eval("#xp-sel", e => e.textContent)), "seleciona todos os " + nBrinq + " da busca");
+  const antes = X.chamadas.filter(c => c.acao === "publicar").length;
+  await pg.$eval('#xp-sel [data-acao="ocultar"]', e => e.click()); await pg.waitForSelector(".dialogo", { timeout: 5000 });
+  await pg.$$eval(".dialogo .dacoes button", l => l[l.length - 1].click()); await espera(1500);
+  ok(X.ajustes.filter(a => a.oculto).length >= nBrinq, "ocultou todos de uma vez (" + X.ajustes.filter(a => a.oculto).length + ")");
+  ok(X.chamadas.filter(c => c.acao === "publicar").length === antes + 1, "publica o site uma vez só");
+  await pg.screenshot({ path: path.join(SH, "painel-xbz-lote.png") });
+
 
   console.log("== pedido");
   await pg.goto(B + "/painel#xbz/pedidos", { waitUntil: "networkidle2" }); await pg.waitForSelector("#xn-txt", { timeout: 15000 });

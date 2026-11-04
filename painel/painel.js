@@ -323,7 +323,7 @@
   // =====================================================================
   function casca(conteudo, aba) {
     const nome = (E.equipe && E.equipe.nome) || (sessao && sessao.email) || "";
-    const abas = [["", "Produtos", I.lista], ["estoque", "Estoque", I.caixa], ["xbz", "XBZ e preços", I.envia], ["ajustes", "Prazos e ajustes", I.ajustes]];
+    const abas = [["", "Produtos da Khaus", I.lista], ["xbz/produtos", "Produtos da XBZ", I.lista], ["estoque", "Estoque", I.caixa], ["xbz", "XBZ e preços", I.envia], ["ajustes", "Prazos e ajustes", I.ajustes]];
     return `${DEMO ? '<div class="demo-faixa">Modo demonstração: as alterações ficam só neste navegador e não vão para o site.</div>' : ""}
 <header class="topo">
   <a class="marca" href="#" data-ir=""><img src="/logo/khaus-logo-claro-600.webp" width="600" height="190" alt="Khaus"><span>Painel</span></a>
@@ -407,13 +407,13 @@
     return c;
   }
   function telaLista() {
-    document.title = "Produtos · Painel Khaus";
+    document.title = "Produtos da Khaus · Painel Khaus";
     const c = contagem();
     const demoP = E.cfg.precosDemo !== false;
     app.innerHTML = casca(`
 ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão marcados como <b>valores de demonstração</b>. Quando a tabela oficial estiver lançada, desligue o aviso em <a href="#ajustes" data-ir="ajustes">Prazos e ajustes</a>.</span></div>` : ""}
 <div class="cab-lista">
-  <div><h1>Produtos</h1><div class="resumo-n"><span><b class="num">${c.ativo}</b> no site</span><span><b class="num">${c.oculto}</b> ocultos</span><span><b class="num">${c.esgotado}</b> sem estoque</span><span><b class="num">${c.baixo}</b> com estoque baixo</span></div></div>
+  <div><h1>Produtos da Khaus</h1><p class="sub">Os produtos próprios da Khaus, com fotos e preços dela. Os mais de 3.600 da XBZ ficam em <a href="#xbz/produtos" data-ir="xbz/produtos">Produtos da XBZ</a>.</p><div class="resumo-n"><span><b class="num">${c.ativo}</b> no site</span><span><b class="num">${c.oculto}</b> ocultos</span><span><b class="num">${c.esgotado}</b> sem estoque</span><span><b class="num">${c.baixo}</b> com estoque baixo</span></div></div>
   <a class="btn btn-azul" href="#novo" data-ir="novo">${I.mais}Novo produto</a>
 </div>
 <div class="barra" role="search">
@@ -540,7 +540,7 @@ ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão m
     ${a.prazos.length < 5 ? `<button type="button" class="btn btn-linha" id="aj-novo-pz" style="align-self:flex-start">${I.mais}Incluir prazo</button>` : ""}
     <label class="interruptor"><input type="checkbox" id="aj-pzdemo"${a.prazosDemo ? " checked" : ""}><span>Mostrar no site que os prazos ainda são de demonstração</span></label></div></section>
   <section class="bloco"><h2>${I.etiqueta}Preços</h2>
-    <div class="conteudo"><label class="interruptor"><input type="checkbox" id="aj-prdemo"${a.precosDemo ? " checked" : ""}><span>Mostrar no site que os preços são <b>valores de demonstração</b></span></label><p class="dica">Desligue quando a tabela oficial da Khaus estiver lançada em todos os produtos.</p></div></section>
+    <div class="conteudo"><label class="interruptor"><input type="checkbox" id="aj-prdemo"${a.precosDemo ? " checked" : ""}><span>Mostrar no site que os preços são <b>valores de demonstração</b> (vale para todos os produtos, inclusive os da XBZ)</span></label><p class="dica">Desligue quando a tabela oficial da Khaus estiver lançada em todos os produtos.</p></div></section>
   <section class="bloco"><h2>Cores extras</h2><p class="sub">Cores que ainda não existem no catálogo. Depois de incluir, aparecem para escolher em qualquer produto.</p>
     <div class="conteudo"><div class="cores-extra">${Object.keys(a.cores).map(k => `<span class="ficha"><i style="--c:${esc(a.cores[k][1])}"></i>${esc(a.cores[k][0])}<button type="button" data-tira-cor="${esc(k)}" aria-label="Tirar a cor ${esc(a.cores[k][0])}">${I.x}</button></span>`).join("") || '<span class="dica">Nenhuma cor extra.</span>'}</div>
     <div class="nova-cor"><input class="ent" id="aj-cor-nome" placeholder="Nome da cor (ex.: Verde água)" maxlength="30" aria-label="Nome da cor"><input type="color" id="aj-cor-hex" value="#6ad4ae" aria-label="Cor"><button type="button" class="btn btn-linha" id="aj-cor-add">${I.mais}Incluir cor</button></div></div></section>
@@ -567,7 +567,9 @@ ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão m
       const prazos = a.prazos.map(z => ({ id: z.id || slug(z.nome), nome: String(z.nome).trim(), de: +z.de, ate: +z.ate, extra: +z.extra, tag: String(z.tag || "").trim() })).sort((x, y) => y.ate - x.ate);
       const b = $("#aj-salvar"); b.classList.add("carregando"); b.disabled = true;
       try {
+        const mudouDemo = E.cfg.precosDemo !== a.precosDemo;
         await api.gravaConfig("prazos", prazos); await api.gravaConfig("prazosDemo", a.prazosDemo); await api.gravaConfig("precosDemo", a.precosDemo); await api.gravaConfig("cores", a.cores);
+        if (!DEMO && mudouDemo && window.KhausXbz) await window.KhausXbz.demoGeral(a.precosDemo).catch(() => { });
         Object.assign(E.cfg, { prazos, prazosDemo: a.prazosDemo, precosDemo: a.precosDemo, cores: a.cores }); E.cores = Object.assign({}, E.coresBase, a.cores);
         a.sujo = false; aviso("Ajustes salvos. O site já mostra os prazos novos.", { link: ["Ver no site", SITE_PUB + "/?fresco=1"] }); telaAjustes();
       } catch (er) { b.classList.remove("carregando"); b.disabled = false; trataErro(er); }
