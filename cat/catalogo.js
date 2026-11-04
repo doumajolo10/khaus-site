@@ -79,7 +79,7 @@ function deKhaus(p, esgotadoCfg) {
   const faixas = (p.faixas || []).filter(f => f && f[1] > 0);
   const total = cores.some(c => c.est == null) ? null : cores.reduce((s, c) => s + c.est, 0);
   return {
-    id: "k-" + p.id, fonte: "k", nome: p.nome, cat: categoria(p.nome), preco: faixas.length ? faixas[0][1] : null, min: p.min || 1,
+    id: "k-" + p.id, fonte: "k", nome: p.nome, cat: p.cat_catalogo && CAT_NOME[p.cat_catalogo] ? p.cat_catalogo : categoria(p.nome), preco: faixas.length ? faixas[0][1] : null, min: p.min || 1,
     est: total, tipo: "", med: 0, cores, faixasAbs: faixas, maxCor: total == null ? 1e9 : Math.max(0, ...cores.map(c => c.est ?? 0)),
     desc: p.descricao && p.descricao !== p.sub ? p.descricao : (p.specs || ""), destaque: true, fotoK: p.foto ? null : p.id
   };

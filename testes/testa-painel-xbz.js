@@ -111,6 +111,11 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
   await pg.screenshot({ path: path.join(SH, "painel-xbz-lote.png") });
 
 
+  console.log("== categoria no catálogo completo (produto da Khaus)");
+  await pg.goto(B + "/painel#editar/garrafa-500ml", { waitUntil: "networkidle2" }); await pg.waitForSelector("#c-catc", { timeout: 10000 });
+  ok(/Automática: Garrafas/.test(await pg.$eval("#c-catc", e => e.options[0].textContent)), "mostra a categoria automática pelo nome");
+  await pg.select("#c-catc", "kits"); await pg.evaluate(() => document.querySelector("#b-salvar").click()); await espera(1200);
+  ok(F.db.produtos.find(x => x.id === "garrafa-500ml").cat_catalogo === "kits", "grava a categoria escolhida para o catálogo");
   console.log("== pedido");
   await pg.goto(B + "/painel#xbz/pedidos", { waitUntil: "networkidle2" }); await pg.waitForSelector("#xn-txt", { timeout: 15000 });
   await pg.type("#xn-txt", "Olá, Khaus! Quero um orçamento (KH-0411-ABC):\n\n1. Copo Térmico 700ml — Preto\n   Ref. 19114-PRE · 100 un. × R$ 66,14 = R$ 6.614,00\n\n2. Kit churrasco\n   Ref. kit-churrasco-2-pecas · 5 un.");

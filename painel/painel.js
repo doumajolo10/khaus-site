@@ -102,7 +102,7 @@
     const t = await r.text(); return t ? JSON.parse(t) : null;
   }
   const caminhoBalde = url => { const m = String(url).split(FOTO_OK)[1]; return m ? decodeURIComponent(m.split("?")[0]) : null; };
-  const CAMPOS = ["cat", "nome", "sub", "descricao", "specs", "cores", "esgotadas", "estoque", "min", "faixas", "ativo", "ordem", "foto"];
+  const CAMPOS = ["cat", "cat_catalogo", "nome", "sub", "descricao", "specs", "cores", "esgotadas", "estoque", "min", "faixas", "ativo", "ordem", "foto"];
 
   const nuvem = {
     async entrar(email, senha) { salvaSessao(await auth("token?grant_type=password", { email, password: senha })); },
@@ -212,7 +212,7 @@
   const catNome = id => (E.cats.find(c => c[0] === id) || [id, id])[1];
   const corDe = k => E.cores[k] || [k, "#999999"];
   function linha(r) {
-    const x = { id: r.id, cat: r.cat || "", nome: r.nome || "", sub: r.sub || "", descricao: r.descricao || "", specs: r.specs || "", cores: Array.isArray(r.cores) ? r.cores.slice() : [], esgotadas: Array.isArray(r.esgotadas) ? r.esgotadas.slice() : [], estoque: r.estoque && typeof r.estoque === "object" ? Object.assign({}, r.estoque) : {}, min: +r.min || 1, faixas: Array.isArray(r.faixas) ? r.faixas.map(t => [+t[0], +t[1]]) : [], ativo: r.ativo !== false, ordem: +r.ordem || 0, foto: r.foto || null, alterado_em: r.alterado_em || null, alterado_por: r.alterado_por || null };
+    const x = { id: r.id, cat: r.cat || "", cat_catalogo: r.cat_catalogo || "", nome: r.nome || "", sub: r.sub || "", descricao: r.descricao || "", specs: r.specs || "", cores: Array.isArray(r.cores) ? r.cores.slice() : [], esgotadas: Array.isArray(r.esgotadas) ? r.esgotadas.slice() : [], estoque: r.estoque && typeof r.estoque === "object" ? Object.assign({}, r.estoque) : {}, min: +r.min || 1, faixas: Array.isArray(r.faixas) ? r.faixas.map(t => [+t[0], +t[1]]) : [], ativo: r.ativo !== false, ordem: +r.ordem || 0, foto: r.foto || null, alterado_em: r.alterado_em || null, alterado_por: r.alterado_por || null };
     return x;
   }
   // estoque: por cor ({cor: qtd}) ou total na chave "_" quando o produto não tem cores; vazio = não controla
@@ -608,7 +608,8 @@ ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão m
     <section class="bloco"><h2><span class="n">2</span>Produto</h2>
       <div class="conteudo">
         <div class="campo"><label for="c-nome">Nome</label><input class="ent" id="c-nome" value="${esc(d.nome)}" maxlength="120" placeholder="Ex.: Copo térmico 473ml"></div>
-        <div class="linha"><div class="campo"><label for="c-cat">Categoria</label><select class="ent" id="c-cat">${E.cats.map(([id, n]) => `<option value="${esc(id)}"${d.cat === id ? " selected" : ""}>${esc(n)}</option>`).join("")}</select></div>
+        <div class="linha"><div class="campo"><label for="c-cat">Categoria</label><select class="ent" id="c-cat">${E.cats.map(([id, n]) => `<option value="${esc(id)}"${d.cat === id ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><span class="dica">Linha da página inicial (Mais pedidos).</span></div>
+          ${E.core ? `<div class="campo"><label for="c-catc">Categoria no catálogo completo</label><select class="ent" id="c-catc"><option value="">Automática: ${esc(E.core.CAT_NOME[E.core.categoria(d.nome || "")] || "")}</option>${Object.keys(E.core.CAT_NOME).map(id => `<option value="${id}"${d.cat_catalogo === id ? " selected" : ""}>${esc(E.core.CAT_NOME[id])}</option>`).join("")}</select><span class="dica">Onde o produto aparece em /catalogo.</span></div>` : ""}</div><div class="linha">
           <div class="campo"><label for="c-id">Código</label><input class="ent" id="c-id" value="${esc(d.id)}" maxlength="60" spellcheck="false"${ed.novo ? "" : " readonly aria-readonly=\"true\""}><span class="dica">${ed.novo ? "Montado sozinho pelo nome. É o endereço do produto no site." : "O código não muda depois de criado."}</span></div></div>
         <div class="campo"><label for="c-sub">Frase curta</label><input class="ent" id="c-sub" value="${esc(d.sub)}" maxlength="160" placeholder="Aparece embaixo do nome no catálogo"></div>
         <div class="campo"><label for="c-desc">Descrição</label><textarea class="ent" id="c-desc" rows="4" maxlength="4000">${esc(d.descricao)}</textarea></div>
@@ -667,6 +668,7 @@ ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão m
     $("#c-id").addEventListener("input", e => { if (!ed.novo) return; e.target.value = slug(e.target.value); d.id = e.target.value; ed.idManual = true; muda(); });
     [["c-sub", "sub"], ["c-desc", "descricao"], ["c-specs", "specs"]].forEach(([id, k]) => $("#" + id).addEventListener("input", e => { d[k] = e.target.value; muda(); }));
     $("#c-cat").addEventListener("change", e => { d.cat = e.target.value; muda(); });
+    if ($("#c-catc")) $("#c-catc").addEventListener("change", e => { d.cat_catalogo = e.target.value; muda(); });
     $("#c-min").addEventListener("input", e => { d.min = Math.max(1, parseInt(e.target.value, 10) || 1); muda(); });
     $("#c-ordem").addEventListener("input", e => { d.ordem = parseInt(e.target.value, 10) || 0; muda(); });
     $("#c-ativo").addEventListener("change", e => { d.ativo = e.target.checked; muda(); });
@@ -757,7 +759,7 @@ ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão m
       if (ed.fotoNova && ed.fotoNova.estado === "enviando") { $("#estado").textContent = "Terminando de enviar a foto…"; await new Promise(ok => { const t = setInterval(() => { if (!ed.fotoNova || ed.fotoNova.estado !== "enviando") { clearInterval(t); ok(); } }, 200); }); if (ed.fotoNova && ed.fotoNova.estado === "erro") throw new Error("A foto não subiu. Escolha outra ou volte para a foto do site."); }
       const foto = ed.fotoNova && ed.fotoNova.url ? ed.fotoNova.url : d.foto;
       const est = {}; Object.keys(d.estoque).forEach(k => { if ((d.cores.length ? d.cores.includes(k) : k === "_") && d.estoque[k] !== "" && d.estoque[k] !== null) est[k] = +d.estoque[k]; });
-      const reg = { cat: d.cat, nome: d.nome.trim(), sub: d.sub.trim(), descricao: d.descricao.trim(), specs: d.specs.trim(), cores: d.cores, esgotadas: d.esgotadas.filter(k => d.cores.includes(k)), estoque: est, min: d.min, faixas: ord, ativo: d.ativo, ordem: d.ordem, foto: foto || null };
+      const reg = { cat: d.cat, cat_catalogo: d.cat_catalogo || null, nome: d.nome.trim(), sub: d.sub.trim(), descricao: d.descricao.trim(), specs: d.specs.trim(), cores: d.cores, esgotadas: d.esgotadas.filter(k => d.cores.includes(k)), estoque: est, min: d.min, faixas: ord, ativo: d.ativo, ordem: d.ordem, foto: foto || null };
       const r = ed.novo ? await api.criar(Object.assign({ id: d.id }, reg)) : await api.alterar(d.id, reg);
       const x = linha(r); const i = E.lista.findIndex(y => y.id === x.id); if (i >= 0) E.lista[i] = x; else E.lista.push(x);
       const sobra = ed.removidas.filter(u => u !== reg.foto); if (ed.orig && ed.orig.foto && ed.orig.foto !== reg.foto) sobra.push(ed.orig.foto); if (sobra.length) api.apagarFotos(sobra).catch(() => { });
@@ -791,7 +793,8 @@ ${demoP ? `<div class="faixa-aviso">${I.alerta}<span>Os preços do site estão m
       const eq = await api.equipe();
       if (!eq || !eq.length) return telaSemAcesso();
       E.equipe = eq[0];
-      const [cat, lista, cfg] = await Promise.all([catalogo(), api.listar(), api.config()]);
+      const [cat, lista, cfg, core] = await Promise.all([catalogo(), api.listar(), api.config(), import("/xbz/core.js").catch(() => null)]);
+      E.core = core;
       E.cats = cat.categorias || []; E.coresBase = cat.cores || {};
       E.cfg = {}; (cfg || []).forEach(c => { E.cfg[c.chave] = c.valor; });
       E.cores = Object.assign({}, E.coresBase, E.cfg.cores || {});
