@@ -968,6 +968,8 @@ html[data-theme="dark"] .kx-cat{background:var(--sf2);border:1px solid var(--lin
 .kx-ver svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
 .kx-ver:hover{color:#6AD4AE}
 @media (max-width:900px){.kx-cat{grid-template-columns:1fr;padding:24px 20px}.kx-ver{justify-self:start}}
+/* botões lado a lado não podem encolher além do texto (overflow:hidden zera o mínimo do flex) */
+.pm .btns .btn,.drawer .row .btn{flex:1 1 auto}
 </style>
 <style id="kx-cats-css">
 .kx-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}

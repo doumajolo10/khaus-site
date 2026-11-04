@@ -85,8 +85,8 @@ async function publica(enxuto?: any[]) {
 }
 
 async function sincroniza(acao: string, limite: number) {
-  let r = await xbz("ProdutosListar", {}, "xbz:produtos", limite);
-  if (r.status === 404 || r.status === 405) r = await xbz("GetListaDeProdutos", { query: { cnpj: Deno.env.get("XBZ_CNPJ") || "", token: Deno.env.get("XBZ_TOKEN") || "" } }, "xbz:produtos", limite);
+  // GetListaDeProdutos traz preço e estoque; o ProdutosListar desta conta só traz o cadastro (sem preço nem estoque)
+  const r = await xbz("GetListaDeProdutos", { query: { cnpj: Deno.env.get("XBZ_CNPJ") || "", token: Deno.env.get("XBZ_TOKEN") || "" } }, "xbz:produtos", limite);
   if (r.erro) return { ok: false, erro: r.erro };
   const linhas = r.dados as Record<string, unknown>[];
   // proteção: uma resposta vazia ou muito menor que o normal não apaga o catálogo do site
@@ -95,6 +95,11 @@ async function sincroniza(acao: string, limite: number) {
     return { ok: false, erro: `A XBZ devolveu só ${Array.isArray(linhas) ? linhas.length : 0} linhas; mantive o catálogo anterior.` };
   }
   const novo = C.enxuga(linhas);
+  const comPreco = novo.filter(p => p.v.some(v => v.custo > 0)).length;
+  if (comPreco < 500) {
+    await registra(acao, r.status, false, { erro: "Resposta sem preço, catálogo mantido", linhas: linhas.length, produtos: novo.length, comPreco });
+    return { ok: false, erro: `A XBZ devolveu ${novo.length} produtos, mas só ${comPreco} com preço; mantive o catálogo anterior.` };
+  }
   const antigo: any[] | null = await baixa("khaus-xbz", "enxuto.json");
   const antes = new Set((antigo || []).map(p => p.cod)), agora = new Set(novo.map(p => p.cod));
   const novos = novo.filter(p => !antes.has(p.cod)).map(p => p.cod);
