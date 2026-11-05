@@ -898,6 +898,18 @@ html.lite .pw img{mix-blend-mode:normal}
 html.lite #grid .card,html.lite #stripT .si{content-visibility:auto;contain-intrinsic-size:auto 360px}
 html.lite section{content-visibility:auto;contain-intrinsic-size:auto 900px}
 html.lite #hero,html.lite #catalogo{content-visibility:visible}
+/* ===== CELULAR: rolagem leve =====
+   No celular o "mesclar" (multiply) das mais de 100 fotos com o fundo cinza obriga o aparelho a recompor
+   cada foto a cada quadro da rolagem. Aqui o fundo das fotos vira branco (igual ao tema escuro) e a foto
+   entra normal, sem mesclar: o visual fica o mesmo e a rolagem para de engasgar. */
+@media (max-width:1020px),(hover:none){
+  .pw img{mix-blend-mode:normal!important}
+  .card .tile,.si .box,.kit .kimg,.pm .shot,.hstage,.mini,.combo button .mini,.fly{background:#fff!important}
+  .hstage{border-radius:22px}.hstage::before{display:none}
+  .aur i{animation:none!important}.cta .aur i{mix-blend-mode:normal}
+  #grid .card,#stripT .si{content-visibility:auto;contain-intrinsic-size:auto 360px}
+  section:not(#hero):not(#catalogo){content-visibility:auto;contain-intrinsic-size:auto 900px}
+}
 
 /* ===== MARCA ===== */
 .brand{gap:0}
@@ -1294,7 +1306,8 @@ if(fine&&!reduce){ window.addEventListener("mousemove",function(e){ var x=(e.cli
   var sp=document.createElement("div"); sp.className="sprog"; document.body.appendChild(sp);
   var gr=document.createElement("div"); gr.className="grain"; gr.setAttribute("aria-hidden","true"); document.body.appendChild(gr);
   var sh=$(".shint");
-  window.addEventListener("scroll",function(){ var h=document.documentElement.scrollHeight-window.innerHeight; sp.style.transform="scaleX("+(h>0?Math.min(1,window.scrollY/h):0)+")"; if(sh) sh.style.opacity=window.scrollY>80?0:1; },{passive:true});
+  window.__khH=function(){ return window.__khHv; }; (function(){ var de=document.documentElement; function med(){ window.__khHv=de.scrollHeight-window.innerHeight; } med(); window.addEventListener("resize",med,{passive:true}); if(window.ResizeObserver) new ResizeObserver(med).observe(document.body); })();
+  window.addEventListener("scroll",function(){ var h=window.__khH(); sp.style.transform="scaleX("+(h>0?Math.min(1,window.scrollY/h):0)+")"; if(sh) sh.style.opacity=window.scrollY>80?0:1; },{passive:true});
   /* texto que rola nos botões e links */
   function roll(el){ if(el.dataset.roll) return; el.dataset.roll=1; [].slice.call(el.childNodes).forEach(function(n){ if(n.nodeType===3&&n.textContent.trim()){ var w=document.createElement("span"); w.className="rl"; w.innerHTML="<span>"+esc(n.textContent.trim())+"</span><span aria-hidden=\"true\">"+esc(n.textContent.trim())+"</span>"; el.replaceChild(w,n); } }); }
   if(fine&&!reduce){ $$(".hcta .btn,.cta .btn,.nav-links a,.vcta,footer .ft a").forEach(roll); var _rg=renderGrid; renderGrid=function(){ _rg(); $$(".vcta").forEach(roll); }; }
@@ -1358,7 +1371,7 @@ function tbHtml(p){ var t=p.tiers, hi=t[0][1], lo=t[t.length-1][1]; var off=Math
   var cm=$(".steps .comet"); if(cm&&hasGsap&&window.ScrollTrigger&&!reduce&&!isMobile){ ScrollTrigger.create({trigger:"#steps",start:"top 70%",end:"bottom 60%",scrub:.5,onUpdate:function(st){ cm.style.left=(st.progress*100).toFixed(2)+"%"; cm.style.opacity=st.progress>0.01&&st.progress<.995?1:0; }}); }
   /* voltar ao topo */
   var tt=$("#totop"), circ=tt&&tt.querySelector("circle");
-  if(tt){ window.addEventListener("scroll",function(){ var h=document.documentElement.scrollHeight-window.innerHeight, k=h>0?window.scrollY/h:0; tt.classList.toggle("on",window.scrollY>700); circ.style.strokeDashoffset=(150.8*(1-k)).toFixed(1); },{passive:true}); }
+  if(tt){ window.addEventListener("scroll",function(){ var h=window.__khH?window.__khH():document.documentElement.scrollHeight-window.innerHeight, k=h>0?window.scrollY/h:0; tt.classList.toggle("on",window.scrollY>700); circ.style.strokeDashoffset=(150.8*(1-k)).toFixed(1); },{passive:true}); }
   /* selo gira mais rápido com a velocidade do scroll */
   var ring=$(".seal svg.ring"); if(ring&&lenis&&hasGsap&&!reduce){ var rot=0, vel=0; ring.style.animation="none"; lenis.on("scroll",function(e){ vel=(e.velocity||0); }); gsap.ticker.add(function(){ rot+=.28+Math.min(8,Math.abs(vel))*.5; vel*=.9; ring.style.transform="rotate("+rot.toFixed(2)+"deg)"; }); }
 })();
