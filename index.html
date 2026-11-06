@@ -1201,6 +1201,11 @@ var heroFin="preto";
   function paint(i){ var p=byId(HP[i]); $("#showName").textContent=p.name; $("#showFin").textContent=catName(p.cat); if(p.tiers.length){ $("#hcP").textContent=BRL(p.tiers[0][1]); $("#hcS").textContent=p.min+" un"; } else { $("#hcP").textContent=P.length+" produtos"; $("#hcS").textContent="no catálogo 2026"; } }
   function go(i){ if(i===cur) return; var figs=$$("#showPh .hs"), bs=$$("#heroSw button"); figs[cur].classList.remove("on"); figs[cur].classList.add("out"); var old=figs[cur]; setTimeout(function(){ old.classList.remove("out"); },900); figs[i].classList.add("on"); bs.forEach(function(b,k){ b.classList.toggle("on",k===i); b.style.setProperty("--k",0); }); cur=i; paint(i); t0=performance.now(); }
   paint(0);
+  /* produtos ocultos ou excluídos no painel saem do destaque (chamado quando os dados do banco chegam) */
+  window.__khHeroFiltra=function(){ var fica=HP.filter(function(id){ return !!byId(id); }); if(!fica.length||fica.length===HP.length) return;
+    var figs=$$("#showPh .hs"), bs=$$("#heroSw button"); HP.forEach(function(id,i){ if(!byId(id)){ if(figs[i]) figs[i].remove(); if(bs[i]) bs[i].remove(); } }); HP=fica;
+    $$("#showPh .hs").forEach(function(f,k){ f.classList.toggle("on",k===0); f.classList.remove("out"); }); $$("#heroSw button").forEach(function(b,k){ b.dataset.hp=k; b.classList.toggle("on",k===0); b.style.setProperty("--k",0); });
+    cur=0; paint(0); t0=performance.now(); };
   sw.addEventListener("click",function(e){ var b=e.target.closest("[data-hp]"); if(!b) return; stopped=true; go(+b.dataset.hp); $$("#heroSw button").forEach(function(x){ x.style.setProperty("--k",0); }); }); $("#show").addEventListener("touchstart",function(){ stopped=true; },{passive:true});
   if(!reduce){ $("#show").addEventListener("mouseenter",function(){ paused=true; }); $("#show").addEventListener("mouseleave",function(){ paused=false; t0=performance.now()-(+(sw.querySelector("button.on").style.getPropertyValue("--k")||0))*DUR; });
     t0=performance.now(); (function tick(now){ if(!paused&&!stopped&&!isMobile&&!document.hidden&&!window.__khNoHero){ var k=Math.min(1,(now-t0)/DUR); var on=sw.querySelector("button.on"); if(on) on.style.setProperty("--k",k.toFixed(3)); if(k>=1) go((cur+1)%HP.length); } requestAnimationFrame(tick); })(performance.now()); }
@@ -1738,6 +1743,7 @@ function khBusca() {
     try { renderGrid(); } catch (e) { }
     // faixa "Vitrine" (montada antes dos dados chegarem): tira produtos ocultos ou excluídos no painel
     $$("#stripT [data-open]").forEach(function (el) { if (!byId(el.dataset.open)) el.remove(); });
+    try { if (window.__khHeroFiltra) window.__khHeroFiltra(); } catch (e) { }
     cart = cart.filter(function (it) { return it.type !== "p" || byId(it.id); }); try { paintCart(); } catch (e) { }
     if (cur) { var aberto = byId(cur.id); if (aberto) { cur = aberto; khPintaPrazo(); try { pmCalc(); } catch (e) { } } }
     document.documentElement.setAttribute("data-vivo", "ok");

@@ -23,7 +23,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   ok(await p.$eval("#cartN", e => e.textContent) === "1", "contador do topo mostra 1");
 
   console.log("== ficha da página inicial grava na lista única");
-  await p.goto(B + "/?produto=copo-termico-473ml", { waitUntil: "networkidle2" }); await espera(1500);
+  await p.goto(B + "/?produto=garrafa-termica-canudo", { waitUntil: "networkidle2" }); await espera(1500);
   await p.waitForSelector("#pmAdd", { timeout: 8000 });
   const nCores = await p.$$eval("#pmFins button", e => e.length);
   if (nCores > 1) await p.evaluate(() => document.querySelectorAll("#pmFins button")[1].click());
@@ -31,7 +31,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   const exp = await p.$('#pmPrazo .pz[data-pz="expresso"]'); if (exp) { await p.evaluate(e => e.click(), exp); await espera(200); }
   await p.evaluate(() => document.querySelector("#pmAdd").click()); await espera(600);
   l = await lista();
-  const copo = l.find(x => x.id === "k-copo-termico-473ml");
+  const copo = l.find(x => x.id === "k-garrafa-termica-canudo");
   ok(!!copo && copo.q === 40, "copo entrou com 40 un.");
   ok(!!copo && copo.cor === (nCores > 1 ? 1 : 0), "com a cor escolhida");
   ok(!exp || (copo && copo.pz && copo.pz.id === "expresso" && copo.pz.extra > 0), "com o prazo expresso e o acréscimo");
@@ -44,7 +44,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   await p.waitForSelector("#orc.on", { timeout: 15000 });
   const itens = await p.$$eval(".it", e => e.map(x => x.textContent));
   ok(itens.length === 2, "resumo com os 2 itens");
-  ok(itens.some(t => /Copo térmico 473ml/i.test(t) && /Expresso/.test(t)), "copo aparece com o prazo");
+  ok(itens.some(t => /Garrafa térmica/i.test(t) && /Expresso/.test(t)), "copo aparece com o prazo");
 
   console.log("== produto da XBZ no catálogo soma na mesma lista");
   await p.evaluate(() => document.querySelector(".gaveta [data-fecha]").click()); await espera(300);
@@ -55,7 +55,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   await p.evaluate(() => document.querySelector("#orcBtn").click()); await espera(500);
   await p.type("#oNome", "Teste"); await p.evaluate(() => document.querySelector("#orcEnviar").click()); await espera(300);
   const msg = decodeURIComponent((await p.evaluate(() => window.__wa || "")).split("text=")[1] || "");
-  ok(/Boné/i.test(msg) && /Copo térmico 473ml/i.test(msg) && /Caneta/i.test(msg), "mensagem tem os 3 produtos");
+  ok(/Boné/i.test(msg) && /Garrafa térmica/i.test(msg) && /Caneta/i.test(msg), "mensagem tem os 3 produtos");
   ok(/Prazo: Expresso/.test(msg), "mensagem tem o prazo");
 
   console.log("== volta para a página inicial");

@@ -199,6 +199,7 @@ function khBusca() {
     try { renderGrid(); } catch (e) { }
     // faixa "Vitrine" (montada antes dos dados chegarem): tira produtos ocultos ou excluídos no painel
     $$("#stripT [data-open]").forEach(function (el) { if (!byId(el.dataset.open)) el.remove(); });
+    try { if (window.__khHeroFiltra) window.__khHeroFiltra(); } catch (e) { }
     cart = cart.filter(function (it) { return it.type !== "p" || byId(it.id); }); try { paintCart(); } catch (e) { }
     if (cur) { var aberto = byId(cur.id); if (aberto) { cur = aberto; khPintaPrazo(); try { pmCalc(); } catch (e) { } } }
     document.documentElement.setAttribute("data-vivo", "ok");
