@@ -4,7 +4,7 @@
 // Roda uma vez por dia no GitHub (.github/workflows/paginas.yml).
 const fs = require("fs"), path = require("path");
 const RAIZ = path.join(__dirname, "..");
-const SITE = (process.env.SITE_URL || "https://khaus-site.vercel.app").replace(/\/$/, "");
+const SITE = (process.env.SITE_URL || "https://khausbrindes.com.br").replace(/\/$/, "");
 const SUPA = "https://cwsjddppdogvyitspbfr.supabase.co/storage/v1/object/public/khaus-catalogo/";
 const LOCAL = process.argv.includes("--local");
 const DIR = path.join(RAIZ, "c");

@@ -1,5 +1,29 @@
 {
  "cleanUrls": true,
+ "redirects": [
+  {
+   "source": "/",
+   "has": [
+    {
+     "type": "host",
+     "value": "khaus-site.vercel.app"
+    }
+   ],
+   "destination": "https://khausbrindes.com.br/",
+   "permanent": true
+  },
+  {
+   "source": "/:caminho(.*)",
+   "has": [
+    {
+     "type": "host",
+     "value": "khaus-site.vercel.app"
+    }
+   ],
+   "destination": "https://khausbrindes.com.br/:caminho",
+   "permanent": true
+  }
+ ],
  "headers": [
   {
    "source": "/(img|fonts)/(.*)",

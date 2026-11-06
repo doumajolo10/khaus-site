@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /painel
 
-Sitemap: https://khaus-site.vercel.app/sitemap.xml
+Sitemap: https://khausbrindes.com.br/sitemap.xml

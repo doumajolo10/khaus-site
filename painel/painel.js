@@ -5,7 +5,7 @@
   "use strict";
   const S = { url: "https://cwsjddppdogvyitspbfr.supabase.co", chave: "sb_publishable_zpNPLwlPqkOR6pnvrxRGHw_78r3siqN", tabela: "khaus_produtos", balde: "khaus-fotos" };
   const DEMO = /[?&]demo\b/.test(location.search);
-  const SITE_PUB = /khaus-site\.vercel\.app|localhost|127\.0\.0\.1/.test(location.host) ? location.origin : "https://khaus-site.vercel.app";
+  const SITE_PUB = /khausbrindes\.com\.br|khaus-site\.vercel\.app|localhost|127\.0\.0\.1/.test(location.host) ? location.origin : "https://khausbrindes.com.br";
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

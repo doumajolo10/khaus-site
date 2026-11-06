@@ -112,7 +112,7 @@ const INSPECAO = () => {
   let nLinks = 0;
   for (const h of links) {
     if (!h || /^(mailto:|tel:|javascript:)/i.test(h)) continue;
-    const u = h.split("https://khaus-site.vercel.app").join(B);
+    const u = h.split("https://khausbrindes.com.br").join(B);
     if (!u.startsWith(B)) continue;
     if (!u.startsWith(B)) continue;
     nLinks++;
